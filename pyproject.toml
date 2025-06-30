@@ -1,0 +1,7 @@
+[project]
+name = "rl-project"
+version = "0.1.0"
+description = "A project to research DQN agents with transfer learning"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
