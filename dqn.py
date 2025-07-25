@@ -1,63 +1,61 @@
 
+import traceback
 from stable_baselines3 import DQN
 import torch
 import torch.nn as nn
 import gymnasium as gym
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
+from minigrid.wrappers import RGBImgObsWrapper, ImgObsWrapper
 
 class MiniGridCNN(BaseFeaturesExtractor):
-    def __init__(self, observation_space: gym.spaces.Box, features_dim: int = 64):
+    def __init__(self, observation_space: gym.spaces.Box, features_dim: int = 3):
         super().__init__(observation_space, features_dim)
 
-        n_input_channels = observation_space.shape[2]
-
+        n_input_channels = observation_space.shape[0]
+        print(f'Observation Shape: {observation_space.shape}')
+        print(f'Feature Dim: {features_dim}')
         self.cnn = nn.Sequential(
             nn.Conv2d(n_input_channels, 32, kernel_size=3, stride=1, padding=1),
             nn.ReLU(),
-            nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(32, 32, kernel_size=3, stride=2, padding=1),
             nn.ReLU(),
-            nn.Flatten()
+            nn.Conv2d(32, 16, kernel_size=3, stride=2, padding=1),
+            nn.ReLU(),
+            nn.Flatten(),
         )
 
         # Compute shape by doing one forward pass
         with torch.no_grad():
-            sample_input = torch.as_tensor(observation_space.sample()[None]).permute(0, 3, 1, 2).float()
-            n_flatten = self.cnn(sample_input).shape[1]
+            n_flatten = self.cnn(torch.as_tensor(observation_space.sample()[None]).float()).shape[1]
 
-        self.linear = nn.Sequential(
-            nn.Linear(n_flatten, features_dim),
-            nn.ReLU()
-        )
+        self.linear = nn.Sequential(nn.Linear(n_flatten, features_dim), nn.ReLU())
 
     def forward(self, observations: torch.Tensor) -> torch.Tensor:
-        x = observations.permute(0, 3, 1, 2)  # Convert to NCHW
-        x = self.cnn(x)
-        return self.linear(x)
+        return self.linear(self.cnn(observations))
 
 
-def get_policy_kwargs():
+def get_policy_kwargs(env: ImgObsWrapper):
     return dict(
         features_extractor_class=MiniGridCNN,
-        features_extractor_kwargs=dict(features_dim=64),
+        features_extractor_kwargs=dict(features_dim=env.action_space.n)
     )
 
-def get_dqn_model(vec_env, **kwargs):
+def create_dqn_model(vec_env, **kwargs):
     defaults = {
-        "policy": "CnnPolicy",
+        "policy": "MlpPolicy",
         "env": vec_env,
         "verbose": 1,
-        "learning_rate": 5e-4,
-        "buffer_size": 50000,
-        "learning_starts": 5000,
-        "batch_size": 32,
+        "learning_rate": 1e-4,
+        "buffer_size": 100_000,
+        "learning_starts": 10_000,
+        "batch_size": 64,
         "gamma": 0.99,
         "train_freq": 4,
-        "target_update_interval": 10000,
-        "policy_kwargs": get_policy_kwargs(),
+        # "policy_kwargs": get_policy_kwargs(vec_env),
         "tensorboard_log": "./dqn_minigrid_tensorboard/",
-        "exploration_initial_eps": 1.0,
-        "exploration_final_eps": 0.05,
-        "exploration_fraction": 0.8
+        "exploration_initial_eps": 1.0, # exploration rate the training starts with
+        "exploration_final_eps": 0.05, # final exploration rate we reach
+        "exploration_fraction": 0.4 # percent of training when we reach the final exploration rate
     }
 
     # Override defaults with any user-provided values

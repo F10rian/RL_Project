@@ -4,7 +4,7 @@ from stable_baselines3.common.vec_env import VecTransposeImage
 from stable_baselines3.common.callbacks import EvalCallback
 from stable_baselines3.common.vec_env import DummyVecEnv
 import torch
-from dqn import get_dqn_model, get_policy_kwargs
+from dqn import create_dqn_model, get_policy_kwargs
 from envs import make_env
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.env_util import make_vec_env
@@ -31,25 +31,23 @@ def train(env_id, model, env):
 
 def pretrain(env_id):
     vec_env = make_vec_env(lambda: make_env(env_id), n_envs=1)
-    vec_env = VecTransposeImage(vec_env)
 
-    model = get_dqn_model(vec_env)
+    model = create_dqn_model(vec_env)
 
     train(env_id, model, vec_env)
 
 
 def finetune(env_id, model_path):
     vec_env = make_vec_env(lambda: make_env(env_id), n_envs=1)
-    vec_env = VecTransposeImage(vec_env)
     
     model = DQN.load(model_path, env=vec_env)
 
-    new_model = get_dqn_model(
+    new_model = create_dqn_model(
         vec_env,
         exploration_initial_eps=0.8,
         exploration_final_eps=0.05,
         exploration_fraction=0.7
     )
-    new_model.policy.load_state_dict(model.policy.state_dict())
+    new_model.policy.features_extractor_class.cnn.load_state_dict(model.policy.features_extractor_class.cnn.state_dict())
 
     train(env_id, new_model, vec_env)
