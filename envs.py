@@ -3,7 +3,7 @@ from minigrid.envs import CrossingEnv
 from gymnasium.envs.registration import register
 
 from minigrid.wrappers import RGBImgObsWrapper, ImgObsWrapper, FullyObsWrapper, FlatObsWrapper
-from custom_wrappers import ObjectTypeAndAgentWrapper, DirectionInImageWrapper
+from custom_wrappers import DirectionalObsWrapper, ObjectTypeAndAgentWrapper, DirectionInImageWrapper
 from reward_shaping import RewardShapingWrapper
 import gymnasium as gym
 
@@ -42,7 +42,7 @@ def register_envs():
 
 def make_env(env_id):
     env = gym.make(env_id)
-    env = FullyObsWrapper(env)  # This gives you the full 5x5 grid view
+    env = DirectionalObsWrapper(env)  # This gives you the full 5x5 grid view
     env = ImgObsWrapper(env)    # This extracts just the image from the dict
     return env
 

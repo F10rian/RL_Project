@@ -40,7 +40,7 @@ model = DQN(
     tensorboard_log="./dqn_crossing_tensorboard/",
     exploration_initial_eps=1.0,
     exploration_final_eps=0.05,  # Increased from 0.05 for more exploration
-    exploration_fraction=0.5  # Increased exploration period
+    exploration_fraction=0.7  # Increased exploration period
 )
 
 # Training

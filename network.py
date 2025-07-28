@@ -74,9 +74,11 @@ class MiniGridLinear(BaseFeaturesExtractor):
         if observations.dtype != torch.float32:
             observations = observations.float()
         #print("Observations: ", observations.shape)
+        self.print_minigrid(observations)
         
         # Observation is already flattened
         return self.linNet(observations)
+    
     def print_minigrid(self, observations: torch.Tensor):
         print("Shape:", observations.shape)
         
@@ -84,10 +86,10 @@ class MiniGridLinear(BaseFeaturesExtractor):
         original_values = (observations * 255).round().int()
         
         print("Original object types (channel 0):")
-        print(original_values[0])
-        print("Original colors (channel 1):")
-        print(original_values[1])
-        print("Original states (channel 2):")
-        print(original_values[2])
+        print(original_values)
+        # print("Original colors (channel 1):")
+        # print(original_values[1])
+        # print("Original states (channel 2):")
+        # print(original_values[2])
         print("________________________")
         

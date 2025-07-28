@@ -119,3 +119,22 @@ class DirectionInImageWrapper(gym.ObservationWrapper):
                 modified_obs[agent_y, agent_x, 0] += agent_dir
         
         return modified_obs
+    
+
+class DirectionalObsWrapper(FullyObsWrapper):
+    def __init__(self, env):
+        super().__init__(env)
+
+    def observation(self, obs):
+        obs = super().observation(obs)
+
+        modified_obs = obs.copy()
+        
+        # Get agent position and direction
+        agent_pos = self.unwrapped.agent_pos
+        agent_dir = self.unwrapped.agent_dir
+
+        x, y = agent_pos
+        modified_obs[y, x, 0] = 10 + agent_dir  # encode direction in the object channel
+
+        return modified_obs
