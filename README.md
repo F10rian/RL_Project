@@ -31,6 +31,11 @@ Hier eine Kurse Übersicht der wichtigsten Befehle:
 
 ### Add new package
 
+Package erstellen
+```bash
+uv init --package name-of-package
+```
+
 Unsere packages können wir einfach dem package Ordner hinzufügen und mit dem folgenden Befehl zu einem uv package machen:
 
 ```bash
