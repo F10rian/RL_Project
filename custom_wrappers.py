@@ -135,6 +135,9 @@ class DirectionalObsWrapper(FullyObsWrapper):
         agent_dir = self.unwrapped.agent_dir
 
         x, y = agent_pos
-        modified_obs[y, x, 0] = 10 + agent_dir  # encode direction in the object channel
+        #print(agent_dir)
+        modified_obs["image"][y, x, 0] = 10 + agent_dir  # encode direction in the object channel
+
+        #print(modified_obs["image"].shape)
 
         return modified_obs

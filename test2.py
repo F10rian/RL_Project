@@ -27,20 +27,20 @@ def get_policy_kwargs(env):
 model = DQN(
     "MlpPolicy",
     env,
-    learning_rate=5e-3,  # Increased learning rate
-    buffer_size=10_000,
-    learning_starts=500,  # Reduced from 1000
-    batch_size=64,
+    learning_rate=1e-3,  # Reduced learning rate for more stable learning
+    buffer_size=50_000,  # Increased buffer size
+    learning_starts=1000,  # Start learning after collecting more experience
+    batch_size=512, #64,
     tau=1.0,
     gamma=0.99,
-    train_freq=4,
-    target_update_interval=100,
+    train_freq=4,  # Train every 4 steps (more stable than every step)
+    target_update_interval=1000,  # Update target network less frequently
     verbose=1,
     policy_kwargs=get_policy_kwargs(env),
     tensorboard_log="./dqn_crossing_tensorboard/",
-    exploration_initial_eps=1.0,
-    exploration_final_eps=0.05,  # Increased from 0.05 for more exploration
-    exploration_fraction=0.7  # Increased exploration period
+    exploration_initial_eps=1.0,  # Start with full exploration
+    exploration_final_eps=0.1,   # End with 10% exploration (higher than default)
+    exploration_fraction=0.7     # Explore for 30% of training (longer than default)
 )
 
 # Training

@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import gymnasium as gym
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
+import time
 
 
 class MiniGridCNN(BaseFeaturesExtractor):
@@ -56,10 +57,10 @@ class MiniGridLinear(BaseFeaturesExtractor):
         self.linNet = nn.Sequential(
             nn.Linear(input_size, 256),
             nn.ReLU(),
-            nn.Dropout(0.1),  # Add dropout for regularization
+            #nn.Dropout(0.1),  # Add dropout for regularization
             nn.Linear(256, 128),
             nn.ReLU(),
-            nn.Dropout(0.1),
+            #nn.Dropout(0.1),
             nn.Linear(128, 64),
             nn.ReLU(),
             nn.Linear(64, features_dim),
@@ -67,6 +68,7 @@ class MiniGridLinear(BaseFeaturesExtractor):
         )
 
     def forward(self, observations: torch.Tensor) -> torch.Tensor:
+        #time.sleep(1)
         #self.print_minigrid(observations[0])
         #convert i.e. ([64, 3, 5, 5]) to ([64, 25])
         observations = observations[:, 0, :, :].view(observations.shape[0], -1)  # Flatten the input
@@ -74,7 +76,7 @@ class MiniGridLinear(BaseFeaturesExtractor):
         if observations.dtype != torch.float32:
             observations = observations.float()
         #print("Observations: ", observations.shape)
-        self.print_minigrid(observations)
+        #self.print_minigrid(observations[0])
         
         # Observation is already flattened
         return self.linNet(observations)
@@ -86,7 +88,8 @@ class MiniGridLinear(BaseFeaturesExtractor):
         original_values = (observations * 255).round().int()
         
         print("Original object types (channel 0):")
-        print(original_values)
+        for i in range(0, 5):
+            print(original_values[i*5:i*5+5])
         # print("Original colors (channel 1):")
         # print(original_values[1])
         # print("Original states (channel 2):")

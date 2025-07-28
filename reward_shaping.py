@@ -1,42 +1,44 @@
 import numpy as np
 import gymnasium as gym
-from custom_wrappers import ObjectTypeAndAgentWrapper
-from minigrid.wrappers import RGBImgObsWrapper, ImgObsWrapper, FullyObsWrapper, FlatObsWrapper
 
 
 class RewardShapingWrapper(gym.Wrapper):
     """
-    Adds reward shaping to help with sparse rewards in MiniGrid Crossing
+    Adds reward shaping to help with sparse rewards in MiniGrid Crossing.
+    Works with the original MiniGrid environment (before any observation wrappers).
     """
     
     def __init__(self, env):
         super().__init__(env)
         self.previous_distance_to_goal = None
         self.goal_position = None
+        self.previous_agent_pos = None
         
     def reset(self, **kwargs):
         obs, info = self.env.reset(**kwargs)
         
-        # Find goal position in the grid
-        # For ObjectTypeAndAgentWrapper, we need to reconstruct the grid
-        if hasattr(self.env, 'unwrapped'):
-            # Get grid size from observation space
-            grid_size = int(np.sqrt(len(obs) - 3))  # -3 for agent info
-            grid = obs[:-3].reshape(grid_size, grid_size)
-            
-            # Find goal (object type 8)
-            goal_positions = np.where(grid == 8)
-            if len(goal_positions[0]) > 0:
-                self.goal_position = (goal_positions[0][0], goal_positions[1][0])
-            else:
-                self.goal_position = None
+        # Find goal position directly from the unwrapped environment's grid
+        grid = self.unwrapped.grid
+        width, height = grid.width, grid.height
         
-        # Calculate initial distance
-        agent_pos = obs[-3:-1]  # x, y position from observation
+        # Find goal position (Goal object)
+        self.goal_position = None
+        for x in range(width):
+            for y in range(height):
+                cell = grid.get(x, y)
+                if cell is not None and cell.type == 'goal':
+                    self.goal_position = (x, y)
+                    break
+            if self.goal_position:
+                break
+        
+        # Calculate initial distance to goal
+        agent_pos = self.unwrapped.agent_pos
+        self.previous_agent_pos = tuple(agent_pos)
+        
         if self.goal_position is not None:
-            self.previous_distance_to_goal = np.sqrt(
-                (agent_pos[0] - self.goal_position[0])**2 + 
-                (agent_pos[1] - self.goal_position[1])**2
+            self.previous_distance_to_goal = np.linalg.norm(
+                np.array(agent_pos) - np.array(self.goal_position)
             )
         else:
             self.previous_distance_to_goal = 0
@@ -46,36 +48,33 @@ class RewardShapingWrapper(gym.Wrapper):
     def step(self, action):
         obs, reward, done, truncated, info = self.env.step(action)
         
+        # Get current agent position
+        current_agent_pos = tuple(self.unwrapped.agent_pos)
+        
+        # Start with original reward
+        shaped_reward = reward
+        
         # Add distance-based reward shaping
         if self.goal_position is not None:
-            agent_pos = obs[-3:-1]  # x, y position from observation
-            current_distance = np.sqrt(
-                (agent_pos[0] - self.goal_position[0])**2 + 
-                (agent_pos[1] - self.goal_position[1])**2
+            current_distance = np.linalg.norm(
+                np.array(current_agent_pos) - np.array(self.goal_position)
             )
-            
-            # Reward for getting closer to goal
+            shaped_reward -= 0.001  # Small penalty for each step
+            # Reward for getting closer to goal (potential-based shaping)
             distance_reward = (self.previous_distance_to_goal - current_distance) * 0.1
+            shaped_reward += distance_reward
+
+            # Small reward for moving (action 2 is move forward)
+            if action == 2 and current_agent_pos != self.previous_agent_pos:
+                shaped_reward += 0.01
             
-            # Small positive reward for moving (to encourage exploration)
-            movement_reward = 0.01 if action == 2 else 0  # action 2 is forward
+            # Small penalty for turning without purpose (actions 0, 1 are turn left/right)
+            elif action in [0, 1]:
+                shaped_reward -= 0.002
             
-            # Penalty for standing still
-            stillness_penalty = -0.05 if action in [3, 4, 5, 6] else 0 #-0.005
-            
-            shaped_reward = reward + distance_reward + movement_reward + stillness_penalty
-            
+            # Update for next step
             self.previous_distance_to_goal = current_distance
-        else:
-            shaped_reward = reward
-            
+        
+        self.previous_agent_pos = current_agent_pos
+        
         return obs, shaped_reward, done, truncated, info
-
-
-def make_env_with_reward_shaping(env_id):
-    """Create environment with reward shaping"""
-    env = gym.make(env_id)
-    env = FullyObsWrapper(env)
-    #env = ObjectTypeAndAgentWrapper(env)
-    env = RewardShapingWrapper(env)
-    return env
