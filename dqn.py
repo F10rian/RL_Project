@@ -31,7 +31,11 @@ class MiniGridCNN(BaseFeaturesExtractor):
         self.linear = nn.Sequential(nn.Linear(n_flatten, features_dim), nn.ReLU())
 
     def forward(self, observations: torch.Tensor) -> torch.Tensor:
-        return self.linear(self.cnn(observations))
+        print(f'Input Shape: {observations.shape}')
+        print("Input: ", observations)
+        x = self.linear(self.cnn(observations))
+        print(f'Output Shape: {x.shape}')
+        return x
 
 
 def get_policy_kwargs(env: ImgObsWrapper):
@@ -51,7 +55,7 @@ def create_dqn_model(vec_env, **kwargs):
         "batch_size": 64,
         "gamma": 0.99,
         "train_freq": 4,
-        # "policy_kwargs": get_policy_kwargs(vec_env),
+        "policy_kwargs": get_policy_kwargs(vec_env),
         "tensorboard_log": "./dqn_minigrid_tensorboard/",
         "exploration_initial_eps": 1.0, # exploration rate the training starts with
         "exploration_final_eps": 0.05, # final exploration rate we reach
