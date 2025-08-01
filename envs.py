@@ -41,7 +41,7 @@ def register_envs():
     )
 
 def make_env(env_id):
-    env = gym.make(env_id)#, render_mode="human")
+    env = gym.make(env_id) #, render_mode="human")
     #env = RewardShapingWrapper(env)  # Enable reward shaping for better learning
     env = DirectionalObsWrapper(env)  # This gives you the full 5x5 grid view
     env = ImgObsWrapper(env)    # This extracts just the image from the dict

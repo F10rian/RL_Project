@@ -48,18 +48,23 @@ class RewardShapingWrapper(gym.Wrapper):
     def step(self, action):
         obs, reward, done, truncated, info = self.env.step(action)
         
-        # Get current agent position
         current_agent_pos = tuple(self.unwrapped.agent_pos)
-        
-        # Start with original reward
-        shaped_reward = reward
-        
-        # Add distance-based reward shaping
+        shaped_reward = reward  # original reward, usually sparse
+
         if self.goal_position is not None:
-            current_distance = np.linalg.norm(
-                np.array(current_agent_pos) - np.array(self.goal_position)
-            )
-            shaped_reward -= 0.001  # Small penalty for each step
+            # Manhattan distance
+            current_distance = abs(current_agent_pos[0] - self.goal_position[0]) + \
+                            abs(current_agent_pos[1] - self.goal_position[1])
+
+            # Normalize distance reward
+            max_dist = abs(self.previous_agent_pos[0] - self.goal_position[0]) + \
+                    abs(self.previous_agent_pos[1] - self.goal_position[1]) + 1e-8
+            distance_reward = (self.previous_distance_to_goal - current_distance) / max_dist
+            shaped_reward += distance_reward
+
+            # Small penalty for each step
+            shaped_reward -= 0.001
+
             # Reward for getting closer to goal (potential-based shaping)
             distance_reward = (self.previous_distance_to_goal - current_distance) * 0.1
             shaped_reward += distance_reward
@@ -67,10 +72,15 @@ class RewardShapingWrapper(gym.Wrapper):
             # Small reward for moving (action 2 is move forward)
             if action == 2 and current_agent_pos != self.previous_agent_pos:
                 shaped_reward += 0.01
+        
+            # Penalty for stepping on lava
+            cell = self.unwrapped.grid.get(*current_agent_pos)
+            if cell is not None and cell.type == 'lava':
+                shaped_reward -= 1.0  # Strong penalty
             
-            # Small penalty for turning without purpose (actions 0, 1 are turn left/right)
-            elif action in [0, 1]:
-                shaped_reward -= 0.002
+            if done and reward > 0:
+                shaped_reward += 1.0
+            
             
             # Update for next step
             self.previous_distance_to_goal = current_distance
