@@ -17,11 +17,23 @@ class MiniGridCrossing5x5(CrossingEnv):
 
 class MiniGridCrossing7x7(CrossingEnv):
     def __init__(self, **kwargs):
-        super().__init__(size=7, num_crossings=1, **kwargs)
+        super().__init__(size=7, num_crossings=0, **kwargs)
 
 class MiniGridCrossing11x11(CrossingEnv):
     def __init__(self, **kwargs):
-        super().__init__(size=11, num_crossings=1, **kwargs)
+        super().__init__(size=11, num_crossings=0, **kwargs)
+
+class MiniGridCrossing15x15(CrossingEnv):
+    def __init__(self, **kwargs):
+        super().__init__(size=15, num_crossings=0, **kwargs)
+
+class MiniGridCrossing21x21(CrossingEnv):
+    def __init__(self, **kwargs):
+        super().__init__(size=21, num_crossings=0, **kwargs)
+
+class MiniGridCrossing49x49(CrossingEnv):
+    def __init__(self, **kwargs):
+        super().__init__(size=29, num_crossings=0, **kwargs)
 
 def register_envs():
     # Register them to gym
@@ -38,6 +50,16 @@ def register_envs():
     register(
         id='MiniGrid-Crossing-11x11-v0',
         entry_point='envs:MiniGridCrossing11x11',
+    )
+
+    register(
+        id='MiniGrid-Crossing-21x21-v0',
+        entry_point='envs:MiniGridCrossing21x21',
+    )
+
+    register(
+        id='MiniGrid-Crossing-49x49-v0',
+        entry_point='envs:MiniGridCrossing49x49',
     )
 
 def make_env(env_id):

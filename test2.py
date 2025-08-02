@@ -19,16 +19,16 @@ print("Env Action Space: ", env.action_space.n)
 
 def get_policy_kwargs(env):
     return dict(
-        features_extractor_class=MiniGridLinear,
+        features_extractor_class=MiniGridCNN,
         features_extractor_kwargs=dict(features_dim=env.action_space.n)
     )
 
 # DQN-Agent initialisieren
 model = DQN(
-    "MlpPolicy",
+    "CnnPolicy",
     env,
-    learning_rate=1e-3,  # Reduced learning rate for more stable learning
-    buffer_size=50_000,  # Increased buffer size
+    learning_rate=1e-4,  # Reduced learning rate for more stable learning
+    buffer_size=100_000,  # Increased buffer size
     learning_starts=1000,  # Start learning after collecting more experience
     batch_size=512, #64,
     tau=1.0,
@@ -44,10 +44,10 @@ model = DQN(
 )
 
 # Training
-model.learn(total_timesteps=100_000)
+model.learn(total_timesteps=500_000)
 
 # Modell speichern
-model.save("dqn_crossing_5x5")
+model.save("dqn_crossing_5x5_cnn_01")
 
 # Auswertung
 mean_reward, std_reward = evaluate_policy(model, env, n_eval_episodes=1000)

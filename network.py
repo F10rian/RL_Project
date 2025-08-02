@@ -16,9 +16,8 @@ class MiniGridCNN(BaseFeaturesExtractor):
         self.cnn = nn.Sequential(
             nn.Conv2d(n_input_channels, 32, kernel_size=3, stride=1, padding=1),
             nn.ReLU(),
-            nn.Conv2d(32, 16, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(32, 64, kernel_size=2, stride=1, padding=1),
             nn.ReLU(),
-            nn.Conv2d(16, 8, kernel_size=3, stride=1, padding=1),
             nn.Flatten(),
         )
 
@@ -30,7 +29,7 @@ class MiniGridCNN(BaseFeaturesExtractor):
         with torch.no_grad():
             n_flatten = self.cnn(torch.as_tensor(single_channel_sample[None]).float()).shape[1]
 
-        self.linear = nn.Sequential(nn.Linear(n_flatten, features_dim), nn.ReLU())
+        self.linear = nn.Sequential(nn.Linear(n_flatten, 128), nn.ReLU(), nn.Linear(128, features_dim))
 
     def forward(self, observations: torch.Tensor) -> torch.Tensor:
         # Extract only the object type channel (channel 0)
@@ -41,7 +40,6 @@ class MiniGridCNN(BaseFeaturesExtractor):
             object_channel = observations[:, 0:1, :, :]  # Shape: (batch, 1, H, W)
         else:  # Single observation
             object_channel = observations[0:1, :, :].unsqueeze(0)  # Shape: (1, 1, H, W)
-        print("Objects: ", object_channel[0, 0, :, :])  # Print the first channel of the first observation
         return self.linear(self.cnn(object_channel))
 
 
@@ -55,15 +53,15 @@ class MiniGridLinear(BaseFeaturesExtractor):
         #print(f'Observations Netword dim: {input_size}')
               
         self.linNet = nn.Sequential(
-            nn.Linear(input_size, 256),
+            nn.Linear(input_size, 512),
             nn.ReLU(),
             #nn.Dropout(0.1),  # Add dropout for regularization
+            nn.Linear(512, 256),
+            nn.ReLU(),
             nn.Linear(256, 128),
             nn.ReLU(),
             #nn.Dropout(0.1),
-            nn.Linear(128, 64),
-            nn.ReLU(),
-            nn.Linear(64, features_dim),
+            nn.Linear(128, features_dim),
             # Remove final ReLU - let the policy head handle this
         )
 
