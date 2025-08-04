@@ -102,6 +102,7 @@ def learning_main(
             exploration_initial_eps=model_params["exploration_initial_eps"],
             exploration_final_eps=model_params["exploration_final_eps"],
             exploration_fraction=model_params["exploration_fraction"],
+            learning_rate=model_params["learning_rate"],
         )
 
     # Training
@@ -132,11 +133,12 @@ if __name__ == "__main__":
 
     model_params = dict(
         policy="CnnPolicy",
-        batch_size=64, # 512
+        batch_size=256, # 512
         buffer_size=100_000,
         exploration_initial_eps=1.0,
         exploration_final_eps=0.1,
         exploration_fraction=0.8,
+        learning_rate=5e-4,
     )
 
     learning_main(
