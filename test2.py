@@ -6,7 +6,7 @@ from stable_baselines3.common.evaluation import evaluate_policy
 from render_callback import checkpoint_callback
 
 from envs import make_env, register_envs
-from learning import curriculum_learning, transfer_weights_cnn
+from learning import curriculum_learning, transfer_weights_cnn, fine_tune_from_checkpoints
 from network import MiniGridCNN, MiniGridLinear
 from envs import Env
 
@@ -91,7 +91,19 @@ def learning_main(
     register_envs()
     env = make_vec_env(lambda: make_env(env_id), n_envs=1)
 
-    if load_saved_model:
+
+    # For sweep over all checkpoints
+    checkpoint_paths = [
+        "trained_models\dqn_5x5_cnn_interval__40000_steps.zip",
+        "trained_models\dqn_5x5_cnn_interval__80000_steps.zip",
+        "trained_models\dqn_5x5_cnn_interval__120000_steps.zip",
+        "trained_models\dqn_5x5_cnn_interval__160000_steps.zip",
+        "trained_models\dqn_5x5_cnn_interval__200000_steps.zip"
+    ]
+    env_id = "MiniGrid-Crossing-7x7-v0"
+    fine_tune_from_checkpoints(checkpoint_paths, env_id)
+
+    """if load_saved_model:
         model = load_model(f"{output_dir}/{saved_model_path}", env=env)
     else:
         model = init_model(
@@ -113,7 +125,7 @@ def learning_main(
 
     # Evaluation
     if eval:
-        eval_model(model, env)
+        eval_model(model, env)"""
 
 
 if __name__ == "__main__":
@@ -149,18 +161,3 @@ if __name__ == "__main__":
         saved_model_path=save_model_path,
         save_model=save_model,
     )
-
-
-
-
-
-# For sweep over all checkpoints
-checkpoint_paths = [
-    "trained_models\dqn_5x5_cnn_interval__40000_steps.zip",
-    "trained_models\dqn_5x5_cnn_interval__80000_steps.zip",
-    "trained_models\dqn_5x5_cnn_interval__120000_steps.zip",
-    "trained_models\dqn_5x5_cnn_interval__160000_steps.zip",
-    "trained_models\dqn_5x5_cnn_interval__200000_steps.zip"
-]
-env_id = "MiniGrid-Crossing-7x7-v0"
-fine_tune_from_checkpoints(checkpoint_paths, env_id)
