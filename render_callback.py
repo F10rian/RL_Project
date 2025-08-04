@@ -15,5 +15,5 @@ class RenderCallback(BaseCallback):
 checkpoint_callback = CheckpointCallback(
     save_freq=40_000,               # Save every 40,000 steps
     save_path="./trained_models/", # Folder to save checkpoints
-    name_prefix="dqn_5x5_"         # File name prefix
+    name_prefix="dqn_5x5_cnn_interval_"         # File name prefix
 )

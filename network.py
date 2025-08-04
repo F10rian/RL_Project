@@ -19,6 +19,7 @@ class MiniGridCNN(BaseFeaturesExtractor):
             nn.Conv2d(32, 64, kernel_size=2, stride=1),                # → (64, 2, 2)
             nn.ReLU(),
             nn.Dropout2d(p=0.2),
+            nn.AdaptiveAvgPool2d((3, 3)),
             nn.Flatten()
         )
 
