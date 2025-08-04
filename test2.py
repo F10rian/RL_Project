@@ -145,6 +145,10 @@ def train(
     # Training
     model.learn(total_timesteps=total_timesteps)
 
+    # Evaluation
+    if eval:
+        eval_model(model, env)
+    
     # Modell speichern
     if save_model:
         model.save(f"{output_dir}/{output_filename}")
