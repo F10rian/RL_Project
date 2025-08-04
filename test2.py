@@ -91,19 +91,7 @@ def learning_main(
     register_envs()
     env = make_vec_env(lambda: make_env(env_id), n_envs=1)
 
-
-    # For sweep over all checkpoints
-    checkpoint_paths = [
-        "trained_models\dqn_5x5_cnn_interval__40000_steps.zip",
-        "trained_models\dqn_5x5_cnn_interval__80000_steps.zip",
-        "trained_models\dqn_5x5_cnn_interval__120000_steps.zip",
-        "trained_models\dqn_5x5_cnn_interval__160000_steps.zip",
-        "trained_models\dqn_5x5_cnn_interval__200000_steps.zip"
-    ]
-    env_id = "MiniGrid-Crossing-7x7-v0"
-    fine_tune_from_checkpoints(checkpoint_paths, env_id)
-
-    """if load_saved_model:
+    if load_saved_model:
         model = load_model(f"{output_dir}/{saved_model_path}", env=env)
     else:
         model = init_model(
@@ -120,13 +108,30 @@ def learning_main(
     # Training
     model.learn(total_timesteps=total_timesteps)
 
+    # Evaluation
+    if eval:
+        eval_model(model, env)
+    
     # Modell speichern
     if save_model:
         model.save(f"{output_dir}/{output_filename}")
+    
+    return model
 
-    # Evaluation
-    if eval:
-        eval_model(model, env)"""
+
+def finetuning_main(env_id):
+    register_envs()
+    
+    # For sweep over all checkpoints
+    checkpoint_paths = [
+        "trained_models/dqn_5x5_cnn_interval__40000_steps",
+        "trained_models/dqn_5x5_cnn_interval__80000_steps",
+        "trained_models/dqn_5x5_cnn_interval__120000_steps",
+        "trained_models/dqn_5x5_cnn_interval__160000_steps",
+        "trained_models/dqn_5x5_cnn_interval__200000_steps"
+    ]
+    fine_tune_from_checkpoints(checkpoint_paths, env_id)
+    
 
 
 if __name__ == "__main__":
@@ -153,13 +158,16 @@ if __name__ == "__main__":
         learning_rate=5e-4,
     )
 
-    learning_main(
-        env_id=env_id,
-        model_params=model_params,
-        total_timesteps=total_timesteps,
-        load_saved_model=load_saved_model,
-        output_filename=output_filename,
-        output_dir=output_dir,
-        saved_model_path=save_model_path,
-        save_model=save_model,
-    )
+    # learning_main(
+    #     env_id=env_id,
+    #     model_params=model_params,
+    #     total_timesteps=total_timesteps,
+    #     load_saved_model=load_saved_model,
+    #     output_filename=output_filename,
+    #     output_dir=output_dir,
+    #     saved_model_path=save_model_path,
+    #     save_model=save_model,
+    # )
+
+    env_id = Env.Minigrid_7x7.value
+    finetuning_main(env_id=env_id)

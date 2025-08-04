@@ -86,7 +86,7 @@ def transfer_weights_cnn(pretrained_model, model):
     pretrained_cnn = pretrained_model.policy.features_extractor.cnn.state_dict()
     model.policy.features_extractor.cnn.load_state_dict(pretrained_cnn)
     model.policy.features_extractor.linear.load_state_dict(
-        pretrained_model.policy.features_extractor.linear.state_dict())
+    pretrained_model.policy.features_extractor.linear.state_dict())
 
     # Load updated state_dict
     model.policy.load_state_dict(new_state_dict, strict=False)
