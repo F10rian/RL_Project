@@ -5,7 +5,7 @@ from stable_baselines3.common.callbacks import EvalCallback
 from stable_baselines3.common.vec_env import DummyVecEnv
 import torch
 from dqn import get_policy_kwargs_cnn
-from envs import make_env
+from envs import make_env, register_envs
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.env_util import make_vec_env
 
@@ -83,13 +83,16 @@ def transfer_weights_cnn(pretrained_model, model):
                 print(f"Transferred: {name}")
             else:
                 print(f"Skipped (shape mismatch): {name}")"""
-    pretrained_cnn = pretrained_model.policy.features_extractor.cnn.state_dict()
-    model.policy.features_extractor.cnn.load_state_dict(pretrained_cnn)
+    #print(pretrained_model.policy.q_net.features_extractor.cnn.state_dict().keys())
+    pretrained_cnn = pretrained_model.policy.q_net.features_extractor.cnn.state_dict() and pretrained_model.policy.q_net_target.features_extractor.cnn.state_dict()
+    """model.policy.features_extractor.cnn.load_state_dict(pretrained_cnn)
     model.policy.features_extractor.linear.load_state_dict(
-        pretrained_model.policy.features_extractor.linear.state_dict())
+        pretrained_model.policy.features_extractor.linear.state_dict())"""
+    
+
 
     # Load updated state_dict
-    model.policy.load_state_dict(new_state_dict, strict=False)
+    model.policy.load_state_dict(pretrained_cnn, strict=False)
     return model
 
 
@@ -143,6 +146,7 @@ def fine_tune_from_checkpoint(checkpoint_path, env_id, index=0):
     # Load the pretrained model
     pretrained_model = DQN.load(checkpoint_path)
     # Load the pretrained model
+    register_envs()
     env = make_vec_env(lambda: make_env(env_id), n_envs=1)
 
     # Create new model with correct input size
@@ -167,6 +171,7 @@ def fine_tune_from_checkpoint(checkpoint_path, env_id, index=0):
 
     # Transfer weights from previous model
     transfer_weights_cnn(pretrained_model, model)
+    print(f"Transferred weights from {checkpoint_path} to new model for {env_id}")
 
     # Optionally freeze early layers
     # for name, param in new_model.policy.features_extractor.cnn.named_parameters():

@@ -6,9 +6,40 @@ from stable_baselines3.common.evaluation import evaluate_policy
 from render_callback import checkpoint_callback
 
 from envs import make_env, register_envs
-from learning import curriculum_learning, transfer_weights_cnn, fine_tune_from_checkpoints
+from learning import curriculum_learning, transfer_weights_cnn, fine_tune_from_checkpoints, fine_tune_from_checkpoint
 from network import MiniGridCNN, MiniGridLinear
 from envs import Env
+
+import argparse
+
+def parse_args():
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(description="Confuguration for Training, Fine-Tuning and co.")
+    parser.add_argument("--mode", type=str, choices=["train", "finetune", "finetune_sweep"], help="Switch between modes: train, finetune, finetune_sweep", required=True)
+    parser.add_argument("--model_path", type=str, default=None, help="Path to the pre-trained model for fine-tuning")
+    parser.add_argument("--steps", type=int, default=100000, help="Number of training steps")
+    parser.add_argument("--eval", action='store_true', help="Evaluate the model after training", default=False)
+    parser.add_argument("--lr", type=float, default=5e-4, help="Learningrate")
+    parser.add_argument("--env", type=str, choices=["MiniGrid-Crossing-5x5-v0", 
+                                                    "MiniGrid-Crossing-7x7-v0",
+                                                    "MiniGrid-Crossing-11x11-v0",
+                                                    "MiniGrid-Crossing-15x15-v0",
+                                                    "MiniGrid-Crossing-21x21-v0"],
+        help="Choose between MiniGrid-Crossing-5x5-v0, MiniGrid-Crossing-7x7-v0, MiniGrid-Crossing-11x11-v0, MiniGrid-Crossing-15x15-v0, MiniGrid-Crossing-21x21-v0",
+        default="MiniGrid-Crossing-5x5-v0")
+    parser.add_argument("--batch_size", type=int, default=64, help="Batch size for training")
+    parser.add_argument("--buffer_size", type=int, default=100000, help="Buffer size for experience replay")
+    parser.add_argument("--exp_init_eps", type=float, default=1.0, help="Initial exploration rate")
+    parser.add_argument("--exp_final_eps", type=float, default=0.1, help="Final exploration rate")
+    parser.add_argument("--exp_fraction", type=float, default=0.8, help="Fraction of training for exploration")
+    parser.add_argument("--verbose", type=int, default=1, help="Verbosity level (0: no output, 1: info, 2: debug)")
+    parser.add_argument("--tensorboard_log", type=str, default="./dqn_crossing_tensorboard/", help="TensorBoard log directory")
+    parser.add_argument("--tau", type=float, default=1.0, help="Soft update coefficient")
+    parser.add_argument("--gamma", type=float, default=0.99, help="Discount factor for future rewards")
+    parser.add_argument("--train_freq", type=int, default=4, help="Training frequency (number of steps between updates)")
+    parser.add_argument("--target_update_interval", type=int, default=1000, help="Target network update interval")
+
+    return parser.parse_args()
 
 
 def get_policy_kwargs(env):
@@ -73,37 +104,24 @@ def curiculum_learning(pretrained_model, env_ids):
 
 def eval_model(model, env):
     mean_reward, std_reward = evaluate_policy(model, env, n_eval_episodes=1000)
-    print(f"Durchschnittliche Belohnung: {mean_reward:.2f} ± {std_reward:.2f}")
+    print(f"Mean reward: {mean_reward:.2f} ± {std_reward:.2f}")
 
 
-def learning_main(
+def train(
         env_id, 
         total_timesteps,
-        model_params = None,
-        load_saved_model = False, 
-        save_model = False,
-        saved_model_path = "dummy", 
-        output_filename = "dummy",
-        output_dir = "log_runs",
-        eval = False,
+        model_params=None,
+        save_model=False,
+        saved_model_path=None, 
+        output_filename="dummy",
+        output_dir="log_runs",
+        eval=False,
     ):
-    # Vektorisiertes Environment (für parallele Umgebung falls nötig)
+    # Vectorized enviroment (usefull for parallel environments)
     register_envs()
     env = make_vec_env(lambda: make_env(env_id), n_envs=1)
 
-
-    # For sweep over all checkpoints
-    checkpoint_paths = [
-        "trained_models\dqn_5x5_cnn_interval__40000_steps.zip",
-        "trained_models\dqn_5x5_cnn_interval__80000_steps.zip",
-        "trained_models\dqn_5x5_cnn_interval__120000_steps.zip",
-        "trained_models\dqn_5x5_cnn_interval__160000_steps.zip",
-        "trained_models\dqn_5x5_cnn_interval__200000_steps.zip"
-    ]
-    env_id = "MiniGrid-Crossing-7x7-v0"
-    fine_tune_from_checkpoints(checkpoint_paths, env_id)
-
-    """if load_saved_model:
+    if saved_model_path is not None:
         model = load_model(f"{output_dir}/{saved_model_path}", env=env)
     else:
         model = init_model(
@@ -114,6 +132,14 @@ def learning_main(
             exploration_initial_eps=model_params["exploration_initial_eps"],
             exploration_final_eps=model_params["exploration_final_eps"],
             exploration_fraction=model_params["exploration_fraction"],
+
+            learning_rate=model_params["learning_rate"],  
+            tau=model_params["tau"],
+            gamma=model_params["gamma"],
+            train_freq=model_params["train_freq"],
+            target_update_interval=model_params["target_update_interval"], 
+            verbose=model_params["verbose"],
+            tensorboard_log=model_params["tensorboard_log"],
         )
 
     # Training
@@ -125,39 +151,57 @@ def learning_main(
 
     # Evaluation
     if eval:
-        eval_model(model, env)"""
+        eval_model(model, env)
 
 
-if __name__ == "__main__":
-    # saved model params
-    output_dir = "log_runs"
-    load_saved_model = False
-    save_model_path = None
-
-    # save model params
-    save_model = False
-    output_filename = None
-
-    # learning params
-    env_id = Env.Minigrid_7x7.value
-    total_timesteps = 200_000
+def main():
+    args = parse_args()
 
     model_params = dict(
         policy="CnnPolicy",
-        batch_size=64, # 512
-        buffer_size=100_000,
-        exploration_initial_eps=1.0,
-        exploration_final_eps=0.1,
-        exploration_fraction=0.8,
+        batch_size=args.batch_size,
+        buffer_size=args.buffer_size,
+        exploration_initial_eps=args.exp_init_eps,
+        exploration_final_eps=args.exp_final_eps,
+        exploration_fraction=args.exp_fraction,
+
+        learning_rate=args.lr,  
+        tau=args.tau,
+        gamma=args.gamma,
+        train_freq=args.train_freq,
+        target_update_interval=args.target_update_interval, 
+        verbose=args.verbose,
+        tensorboard_log=args.tensorboard_log
     )
 
-    learning_main(
-        env_id=env_id,
+    if args.mode == "train":
+        # Train the model
+        train(env_id=args.env,
+        total_timesteps=args.steps,
         model_params=model_params,
-        total_timesteps=total_timesteps,
-        load_saved_model=load_saved_model,
-        output_filename=output_filename,
-        output_dir=output_dir,
-        saved_model_path=save_model_path,
-        save_model=save_model,
-    )
+        save_model=False,
+        saved_model_path=args.model_path, 
+        output_filename="dummy",
+        output_dir="log_runs",
+        eval=args.eval)
+
+    elif args.mode == "finetune":
+        # Fine-tune from checkpoint
+        fine_tune_from_checkpoint(args.model_path, args.env)
+
+    elif args.mode == "finetune_sweep":
+        # For sweep over all checkpoints
+        checkpoint_paths = [
+            "trained_models/dqn_5x5_cnn_interval__40000_steps",
+            "trained_models/dqn_5x5_cnn_interval__80000_steps",
+            "trained_models/dqn_5x5_cnn_interval__120000_steps",
+            "trained_models/dqn_5x5_cnn_interval__160000_steps",
+            "trained_models/dqn_5x5_cnn_interval__200000_steps"
+        ]
+        fine_tune_from_checkpoints(checkpoint_paths, args.env)
+
+    else:
+        print("Invalid mode. Please choose 'train', 'finetune' or 'finetune_sweep'.")
+
+if __name__ == "__main__":
+    main()

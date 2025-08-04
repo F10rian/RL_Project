@@ -43,3 +43,20 @@ uv pip install -e /path/to/name-of-package
 ```
 
 Dabei ist wichtig, dass euer package-Name nicht mit Unterstrich (\_), sondern Bindestrich (-) geschrieben wird, damit uv das unterschieden kann. Ab dann können wir alle unsere packages einfach mit "name_of_package" in unsere Dateien importieren.
+
+
+From scratch training (Baseline):
+
+```bash
+python test2.py --mode train --env MiniGrid-Crossing-5x5-v0 
+```
+
+Fine Tuning (model_path is required):
+```bash
+python test2.py --mode finetune --env MiniGrid-Crossing-5x5-v0 --model_path trained_models/dqn_5x5_cnn_interval__40000_steps
+```
+
+Fine Tuning sweep (the sweep list is hardcoded in test2 those are the models):
+```bash
+python test2.py --mode finetune_sweep --env MiniGrid-Crossing-5x5-v0
+```
