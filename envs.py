@@ -13,7 +13,7 @@ import numpy as np
 # Custom 4x4 version
 class MiniGridCrossing5x5(CrossingEnv):
     def __init__(self, **kwargs):
-        super().__init__(size=5, num_crossings=1, **kwargs)
+        super().__init__(size=5, num_crossings=0, **kwargs)
 
 class MiniGridCrossing7x7(CrossingEnv):
     def __init__(self, **kwargs):
@@ -51,6 +51,12 @@ def register_envs():
         id='MiniGrid-Crossing-11x11-v0',
         entry_point='envs:MiniGridCrossing11x11',
     )
+
+    register(
+        id='MiniGrid-Crossing-15x15-v0',
+        entry_point='envs:MiniGridCrossing15x15',
+    )
+
 
     register(
         id='MiniGrid-Crossing-21x21-v0',

@@ -8,11 +8,12 @@ from envs import make_env, register_envs
 
 register_envs()
 
-env_id = "MiniGrid-Crossing-5x5-v0"
+env_id = "MiniGrid-Crossing-21x21-v0"
 
 # Vektorisiertes Environment (für parallele Umgebung falls nötig)
 env = make_vec_env(lambda: make_env(env_id), n_envs=1)
 
+from learning import curriculum_learning, transfer_weights_cnn
 from network import MiniGridCNN, MiniGridLinear
 
 print("Env Action Space: ", env.action_space.n)
@@ -20,14 +21,14 @@ print("Env Action Space: ", env.action_space.n)
 def get_policy_kwargs(env):
     return dict(
         features_extractor_class=MiniGridCNN,
-        features_extractor_kwargs=dict(features_dim=env.action_space.n)
+        features_extractor_kwargs=dict(features_dim=128) #env.action_space.n)
     )
 
 # DQN-Agent initialisieren
 model = DQN(
     "CnnPolicy",
     env,
-    learning_rate=1e-4,  # Reduced learning rate for more stable learning
+    learning_rate=5e-4,  # Reduced learning rate for more stable learning
     buffer_size=100_000,  # Increased buffer size
     learning_starts=1000,  # Start learning after collecting more experience
     batch_size=512, #64,
@@ -40,15 +41,26 @@ model = DQN(
     tensorboard_log="./dqn_crossing_tensorboard/",
     exploration_initial_eps=1.0,  # Start with full exploration
     exploration_final_eps=0.1,   # End with 10% exploration (higher than default)
-    exploration_fraction=0.7     # Explore for 30% of training (longer than default)
+    exploration_fraction=0.8     # Explore for 30% of training (longer than default)
 )
 
+pretrained_model = DQN.load("dqn_7x7_cnn_01")
+
+
+# model = transfer_weights_cnn(pretrained_model, model)
+# CURRICULUM_ENVS = [
+#     "MiniGrid-Crossing-7x7-v0",
+#     "MiniGrid-Crossing-11x11-v0",
+#     "MiniGrid-Crossing-15x15-v0",
+#     "MiniGrid-Crossing-21x21-v0"
+# ]
+# curriculum_learning(pretrained_model, CURRICULUM_ENVS)
 # Training
-model.learn(total_timesteps=500_000)
+model.learn(total_timesteps=200_000)
 
-# Modell speichern
-model.save("dqn_crossing_5x5_cnn_01")
+# # Modell speichern
+# model.save("dqn_21x21_cnn_from_5x5_01")
 
-# Auswertung
-mean_reward, std_reward = evaluate_policy(model, env, n_eval_episodes=1000)
-print(f"Durchschnittliche Belohnung: {mean_reward:.2f} ± {std_reward:.2f}")
+# # Auswertung
+# mean_reward, std_reward = evaluate_policy(model, env, n_eval_episodes=1000)
+# print(f"Durchschnittliche Belohnung: {mean_reward:.2f} ± {std_reward:.2f}")

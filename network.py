@@ -6,7 +6,7 @@ import time
 
 
 class MiniGridCNN(BaseFeaturesExtractor):
-    def __init__(self, observation_space: gym.spaces.Box, features_dim: int = 3):
+    def __init__(self, observation_space: gym.spaces.Box, features_dim: int = 64):
         super().__init__(observation_space, features_dim)
 
         print("Observation Space: ", observation_space)
@@ -14,11 +14,11 @@ class MiniGridCNN(BaseFeaturesExtractor):
         n_input_channels = 1  # Only object type channel
 
         self.cnn = nn.Sequential(
-            nn.Conv2d(n_input_channels, 32, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(n_input_channels, 32, kernel_size=3, stride=1),  # → (32, 3, 3)
             nn.ReLU(),
-            nn.Conv2d(32, 64, kernel_size=2, stride=1, padding=1),
+            nn.Conv2d(32, 64, kernel_size=2, stride=1),                # → (64, 2, 2)
             nn.ReLU(),
-            nn.Flatten(),
+            nn.Flatten()
         )
 
         # Compute shape by doing one forward pass with single channel
@@ -29,7 +29,11 @@ class MiniGridCNN(BaseFeaturesExtractor):
         with torch.no_grad():
             n_flatten = self.cnn(torch.as_tensor(single_channel_sample[None]).float()).shape[1]
 
-        self.linear = nn.Sequential(nn.Linear(n_flatten, 128), nn.ReLU(), nn.Linear(128, features_dim))
+        self.linear = nn.Sequential(
+            nn.Linear(n_flatten, 128),
+            nn.ReLU(),
+            nn.Linear(128, features_dim)
+        )
 
     def forward(self, observations: torch.Tensor) -> torch.Tensor:
         # Extract only the object type channel (channel 0)
@@ -40,6 +44,7 @@ class MiniGridCNN(BaseFeaturesExtractor):
             object_channel = observations[:, 0:1, :, :]  # Shape: (batch, 1, H, W)
         else:  # Single observation
             object_channel = observations[0:1, :, :].unsqueeze(0)  # Shape: (1, 1, H, W)
+        # print("Objects: ", object_channel[0, 0, :, :])  # Print the first channel of the first observation
         return self.linear(self.cnn(object_channel))
 
 
