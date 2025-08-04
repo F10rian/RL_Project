@@ -1,4 +1,5 @@
 import time
+from enum import Enum
 from minigrid.envs import CrossingEnv
 from gymnasium.envs.registration import register
 
@@ -8,6 +9,14 @@ from reward_shaping import RewardShapingWrapper
 import gymnasium as gym
 
 import numpy as np
+
+
+class Env(Enum):
+    Minigrid_5x5 = "MiniGrid-Crossing-5x5-v0"
+    Minigrid_7x7 = "MiniGrid-Crossing-7x7-v0"
+    Minigrid_11x11 = "MiniGrid-Crossing-11x11-v0"
+    Minigrid_15x15 = "MiniGrid-Crossing-15x15-v0"
+    Minigrid_21x21 = "MiniGrid-Crossing-21x21-v0"
 
 
 # Custom 4x4 version
@@ -38,28 +47,28 @@ class MiniGridCrossing49x49(CrossingEnv):
 def register_envs():
     # Register them to gym
     register(
-        id='MiniGrid-Crossing-5x5-v0',
+        id=Env.Minigrid_5x5.value,
         entry_point='envs:MiniGridCrossing5x5',
     )
 
     register(
-        id='MiniGrid-Crossing-7x7-v0',
+        id=Env.Minigrid_7x7.value,
         entry_point='envs:MiniGridCrossing7x7',
     )
 
     register(
-        id='MiniGrid-Crossing-11x11-v0',
+        id=Env.Minigrid_11x11.value,
         entry_point='envs:MiniGridCrossing11x11',
     )
 
     register(
-        id='MiniGrid-Crossing-15x15-v0',
+        id=Env.Minigrid_15x15.value,
         entry_point='envs:MiniGridCrossing15x15',
     )
 
 
     register(
-        id='MiniGrid-Crossing-21x21-v0',
+        id=Env.Minigrid_21x21.value,
         entry_point='envs:MiniGridCrossing21x21',
     )
 
