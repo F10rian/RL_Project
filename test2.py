@@ -3,6 +3,7 @@ import gymnasium as gym
 from stable_baselines3 import DQN
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.evaluation import evaluate_policy
+from render_callback import checkpoint_callback
 
 from envs import make_env, register_envs
 from learning import curriculum_learning, transfer_weights_cnn
