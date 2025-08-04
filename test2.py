@@ -16,6 +16,7 @@ def parse_args():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description="Confuguration for Training, Fine-Tuning and co.")
     parser.add_argument("--mode", type=str, choices=["train", "finetune", "finetune_sweep"], help="Switch between modes: train, finetune, finetune_sweep", required=True)
+    parser.add_argument("--num_models", type=int, default=1, help="Number of models to train")
     parser.add_argument("--model_path", type=str, default=None, help="Path to the pre-trained model for fine-tuning")
     parser.add_argument("--steps", type=int, default=100000, help="Number of training steps")
     parser.add_argument("--eval", action='store_true', help="Evaluate the model after training", default=False)
@@ -161,51 +162,53 @@ def train(
 def main():
     args = parse_args()
 
-    model_params = dict(
-        policy="CnnPolicy",
-        batch_size=args.batch_size,
-        buffer_size=args.buffer_size,
-        exploration_initial_eps=args.exp_init_eps,
-        exploration_final_eps=args.exp_final_eps,
-        exploration_fraction=args.exp_fraction,
+    for i in range(args.num_models):
+        print(f"Training model {i+1}/{args.num_models} in mode '{args.mode}'")
+        model_params = dict(
+            policy="CnnPolicy",
+            batch_size=args.batch_size,
+            buffer_size=args.buffer_size,
+            exploration_initial_eps=args.exp_init_eps,
+            exploration_final_eps=args.exp_final_eps,
+            exploration_fraction=args.exp_fraction,
 
-        learning_rate=args.lr,  
-        tau=args.tau,
-        gamma=args.gamma,
-        train_freq=args.train_freq,
-        target_update_interval=args.target_update_interval, 
-        verbose=args.verbose,
-        tensorboard_log=args.tensorboard_log
-    )
+            learning_rate=args.lr,  
+            tau=args.tau,
+            gamma=args.gamma,
+            train_freq=args.train_freq,
+            target_update_interval=args.target_update_interval, 
+            verbose=args.verbose,
+            tensorboard_log=args.tensorboard_log
+        )
 
-    if args.mode == "train":
-        # Train the model
-        train(env_id=args.env,
-        total_timesteps=args.steps,
-        model_params=model_params,
-        save_model=False,
-        saved_model_path=args.model_path, 
-        output_filename="dummy",
-        output_dir="log_runs",
-        eval=args.eval)
+        if args.mode == "train":
+            # Train the model
+            train(env_id=args.env,
+            total_timesteps=args.steps,
+            model_params=model_params,
+            save_model=False,
+            saved_model_path=args.model_path, 
+            output_filename="dummy",
+            output_dir="log_runs",
+            eval=args.eval)
 
-    elif args.mode == "finetune":
-        # Fine-tune from checkpoint
-        fine_tune_from_checkpoint(args.model_path, args.env)
+        elif args.mode == "finetune":
+            # Fine-tune from checkpoint
+            fine_tune_from_checkpoint(args.model_path, args.env)
 
-    elif args.mode == "finetune_sweep":
-        # For sweep over all checkpoints
-        checkpoint_paths = [
-            "trained_models/dqn_5x5_cnn_interval__40000_steps",
-            "trained_models/dqn_5x5_cnn_interval__80000_steps",
-            "trained_models/dqn_5x5_cnn_interval__120000_steps",
-            "trained_models/dqn_5x5_cnn_interval__160000_steps",
-            "trained_models/dqn_5x5_cnn_interval__200000_steps"
-        ]
-        fine_tune_from_checkpoints(checkpoint_paths, args.env)
+        elif args.mode == "finetune_sweep":
+            # For sweep over all checkpoints
+            checkpoint_paths = [
+                "trained_models/dqn_5x5_cnn_interval__40000_steps",
+                "trained_models/dqn_5x5_cnn_interval__80000_steps",
+                "trained_models/dqn_5x5_cnn_interval__120000_steps",
+                "trained_models/dqn_5x5_cnn_interval__160000_steps",
+                "trained_models/dqn_5x5_cnn_interval__200000_steps"
+            ]
+            fine_tune_from_checkpoints(checkpoint_paths, args.env)
 
-    else:
-        print("Invalid mode. Please choose 'train', 'finetune' or 'finetune_sweep'.")
+        else:
+            print("Invalid mode. Please choose 'train', 'finetune' or 'finetune_sweep'.")
 
 if __name__ == "__main__":
     main()
