@@ -18,6 +18,7 @@ class MiniGridCNN(BaseFeaturesExtractor):
             nn.ReLU(),
             nn.Conv2d(32, 64, kernel_size=2, stride=1),                # → (64, 2, 2)
             nn.ReLU(),
+            nn.Dropout2d(p=0.2),
             nn.Flatten()
         )
 
@@ -32,6 +33,7 @@ class MiniGridCNN(BaseFeaturesExtractor):
         self.linear = nn.Sequential(
             nn.Linear(n_flatten, 128),
             nn.ReLU(),
+            nn.Dropout(p=0.2),
             nn.Linear(128, features_dim)
         )
 

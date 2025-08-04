@@ -3,12 +3,13 @@ import gymnasium as gym
 from stable_baselines3 import DQN
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.evaluation import evaluate_policy
+from render_callback import checkpoint_callback
 
 from envs import make_env, register_envs
 
 register_envs()
 
-env_id = "MiniGrid-Crossing-21x21-v0"
+env_id = "MiniGrid-Crossing-5x5-v0"
 
 # Vektorisiertes Environment (für parallele Umgebung falls nötig)
 env = make_vec_env(lambda: make_env(env_id), n_envs=1)
@@ -31,7 +32,7 @@ model = DQN(
     learning_rate=5e-4,  # Reduced learning rate for more stable learning
     buffer_size=100_000,  # Increased buffer size
     learning_starts=1000,  # Start learning after collecting more experience
-    batch_size=512, #64,
+    batch_size=256, #64,
     tau=1.0,
     gamma=0.99,
     train_freq=4,  # Train every 4 steps (more stable than every step)
@@ -44,7 +45,7 @@ model = DQN(
     exploration_fraction=0.8     # Explore for 30% of training (longer than default)
 )
 
-pretrained_model = DQN.load("dqn_7x7_cnn_01")
+# pretrained_model = DQN.load("./trained_models/dqn_5x5_cnn_01")
 
 
 # model = transfer_weights_cnn(pretrained_model, model)
@@ -56,7 +57,7 @@ pretrained_model = DQN.load("dqn_7x7_cnn_01")
 # ]
 # curriculum_learning(pretrained_model, CURRICULUM_ENVS)
 # Training
-model.learn(total_timesteps=200_000)
+model.learn(total_timesteps=200_000, callback=checkpoint_callback)
 
 # # Modell speichern
 # model.save("dqn_21x21_cnn_from_5x5_01")

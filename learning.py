@@ -85,7 +85,7 @@ def transfer_weights_cnn(pretrained_model, model):
                 print(f"Skipped (shape mismatch): {name}")
 
     # Load updated state_dict
-    model.policy.load_state_dict(new_state_dict)
+    model.policy.load_state_dict(new_state_dict, strict=False)
     return model
 
 
