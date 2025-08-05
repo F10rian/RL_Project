@@ -4,4 +4,10 @@ version = "0.1.0"
 description = "A project to research DQN agents with transfer learning"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "gymnasium[classic-control]>=1.1.1",
+    "minigrid>=3.0.0",
+    "stable-baselines3[extra]>=2.6.0",
+    "tbparse>=0.0.9",
+    "tensorboard>=2.20.0",
+]
