@@ -7,6 +7,7 @@ from minigrid.wrappers import RGBImgObsWrapper, ImgObsWrapper, FullyObsWrapper, 
 from custom_wrappers import DirectionalObsWrapper, ObjectTypeAndAgentWrapper, DirectionInImageWrapper
 from reward_shaping import RewardShapingWrapper
 import gymnasium as gym
+from minigrid.core.world_object import Wall
 
 import numpy as np
 
@@ -22,7 +23,7 @@ class Env(Enum):
 # Custom 4x4 version
 class MiniGridCrossing5x5(CrossingEnv):
     def __init__(self, **kwargs):
-        super().__init__(size=5, num_crossings=0, **kwargs)
+        super().__init__(size=5, num_crossings=1, **kwargs)
 
 class MiniGridCrossing7x7(CrossingEnv):
     def __init__(self, **kwargs):
