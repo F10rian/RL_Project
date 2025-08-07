@@ -163,6 +163,7 @@ def main():
     args = parse_args()
 
     for i in range(args.num_models):
+        file_name = "dqn_5x5_" + str(i)
         print(f"Training model {i+1}/{args.num_models} in mode '{args.mode}'")
         model_params = dict(
             policy="CnnPolicy",
@@ -186,10 +187,10 @@ def main():
             train(env_id=args.env,
             total_timesteps=args.steps,
             model_params=model_params,
-            save_model=False,
+            save_model=True,
             saved_model_path=args.model_path, 
-            output_filename="dummy",
-            output_dir="log_runs",
+            output_filename=file_name,
+            output_dir="log_baseline_7x7",
             eval=args.eval)
 
         elif args.mode == "finetune":
@@ -198,12 +199,34 @@ def main():
 
         elif args.mode == "finetune_sweep":
             # For sweep over all checkpoints
-            checkpoint_paths = [
+            """checkpoint_paths = [
                 "trained_models/dqn_5x5_cnn_interval__40000_steps",
                 "trained_models/dqn_5x5_cnn_interval__80000_steps",
                 "trained_models/dqn_5x5_cnn_interval__120000_steps",
                 "trained_models/dqn_5x5_cnn_interval__160000_steps",
                 "trained_models/dqn_5x5_cnn_interval__200000_steps"
+            ]"""
+            checkpoint_paths = [
+                "log_baseline/dqn_5x5_0",
+                "log_baseline/dqn_5x5_1",
+                "log_baseline/dqn_5x5_2",
+                "log_baseline/dqn_5x5_3",
+                "log_baseline/dqn_5x5_4",
+                "log_baseline/dqn_5x5_5",
+                "log_baseline/dqn_5x5_6",
+                "log_baseline/dqn_5x5_7",
+                "log_baseline/dqn_5x5_8",
+                "log_baseline/dqn_5x5_9",
+                "log_baseline/dqn_5x5_10",
+                "log_baseline/dqn_5x5_11",
+                "log_baseline/dqn_5x5_12",
+                "log_baseline/dqn_5x5_13",
+                "log_baseline/dqn_5x5_14",
+                "log_baseline/dqn_5x5_15",
+                "log_baseline/dqn_5x5_16",
+                "log_baseline/dqn_5x5_17",
+                "log_baseline/dqn_5x5_18",
+                "log_baseline/dqn_5x5_19",
             ]
             fine_tune_from_checkpoints(checkpoint_paths, args.env)
 
