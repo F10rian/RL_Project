@@ -24,22 +24,22 @@ def get_policy_kwargs_lin():
     )
 
 
-def create_dqn_model_linear(vec_env, **kwargs):
+def create_dqn_model(vec_env, policy, policy_function, **kwargs):
     defaults = {
-        "policy": "MlpPolicy",
+        "policy": policy,
         "env": vec_env,
         "verbose": 1,
-        "learning_rate": 1e-4,
+        "learning_rate": 5e-4,
         "buffer_size": 100_000,
-        "learning_starts": 10_000,
+        "learning_starts": 1000,
         "batch_size": 64,
         "gamma": 0.99,
         "train_freq": 4,
-        "policy_kwargs": get_policy_kwargs_lin(vec_env),
-        "tensorboard_log": "./dqn_minigrid_tensorboard/",
+        "policy_kwargs": policy_function(),
+        "tensorboard_log": "./dqn_crossing_tensorboard/",
         "exploration_initial_eps": 1.0, # exploration rate the training starts with
-        "exploration_final_eps": 0.05, # final exploration rate we reach
-        "exploration_fraction": 0.4 # percent of training when we reach the final exploration rate
+        "exploration_final_eps": 0.1, # final exploration rate we reach
+        "exploration_fraction": 0.8 # percent of training when we reach the final exploration rate
     }
 
     # Override defaults with any user-provided values
