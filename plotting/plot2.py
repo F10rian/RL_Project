@@ -1,0 +1,129 @@
+from tbparse import SummaryReader
+import matplotlib.pyplot as plt
+import numpy as np
+import os
+import argparse
+import sys
+
+def add_reward_plot(log_folders, label, color=None, alpha=0.3):
+    """
+    Add reward data from multiple log folders to the current plot.
+    
+    Args:
+        log_folders: List of paths to tensorboard log folders
+        label: Label for this dataset in the legend
+        color: Color for the mean line and band (auto-selected if None)
+        alpha: Transparency of the min-max band
+    """
+    # Check which folders exist
+    existing_folders = [folder for folder in log_folders if os.path.exists(folder)]
+    print(f"Found {len(existing_folders)} log folders for '{label}': {existing_folders}")
+
+    if not existing_folders:
+        print(f"No log folders found for '{label}'! Please check the paths.")
+        return
+
+    # Collect all reward data
+    all_rewards = []
+    all_steps = []
+
+    for folder in existing_folders:
+        try:
+            reader = SummaryReader(folder)
+            df = reader.scalars
+            reward_df = df[df["tag"] == "rollout/ep_rew_mean"]
+            
+            if not reward_df.empty:
+                all_rewards.append(reward_df["value"].values)
+                all_steps.append(reward_df["step"].values)
+                print(f"Loaded data from {folder}: {len(reward_df)} points")
+            else:
+                print(f"No reward data found in {folder}")
+        except Exception as e:
+            print(f"Error reading {folder}: {e}")
+
+    if not all_rewards:
+        print(f"No reward data found in any folder for '{label}'!")
+        return
+
+    # Find common step range
+    min_steps = min(len(steps) for steps in all_steps)
+    print(f"Using first {min_steps} steps for analysis of '{label}'")
+
+    # Align all data to same step count and calculate running max
+    aligned_running_max = []
+    common_steps = all_steps[0][:min_steps]
+
+    for i, rewards in enumerate(all_rewards):
+        # Calculate running maximum for this run
+        running_max = np.maximum.accumulate(rewards[:min_steps])
+        aligned_running_max.append(running_max)
+
+    # Convert to numpy array for easier calculation
+    running_max_matrix = np.array(aligned_running_max)
+
+    # Calculate statistics on running maxima
+    mean_running_max = np.mean(running_max_matrix, axis=0)
+    min_running_max = np.min(running_max_matrix, axis=0)
+    max_running_max = np.max(running_max_matrix, axis=0)
+
+    # Plot with matching colors for band and mean line
+    plt.fill_between(common_steps, min_running_max, max_running_max, alpha=alpha, 
+                     color=color)  # Remove label to exclude from legend
+    plt.plot(common_steps, mean_running_max, linewidth=2, color=color,
+             label=f'{label} Best Performance (n={len(aligned_running_max)})')
+
+def setup_plot():
+    """Setup the plot with proper formatting."""
+    plt.figure(figsize=(12, 8))
+
+def finalize_plot(title="Best Performance Comparison"):
+    """Finalize the plot with labels, legend, and formatting."""
+    # Set axis limits to ensure 0,0 is at the intersection of axes
+    plt.xlim(left=0)
+    plt.ylim(bottom=0)
+    
+    plt.xlabel("Timesteps", fontsize=12)
+    plt.ylabel("Best Episode Reward (Running Max)", fontsize=12)
+    plt.title(title, fontsize=14)
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+
+# Example usage:
+if __name__ == "__main__":
+    # Setup the plot
+    setup_plot()
+
+    parser = argparse.ArgumentParser(description="Pfad-Name-Paare einlesen")
+
+    parser.add_argument(
+        'entries',
+        nargs='+',
+        help='Enter paths to the log folders followed by their labels, e.g. path1 label1 path2 label2 ...'
+    )
+    args = parser.parse_args()
+    entries = args.entries
+
+    # Check if even number of entries
+    if len(entries) % 2 != 0:
+        print("Every path must have exactly one name associated with it.")
+        sys.exit(1)
+
+    # Create pairs
+    colors =[ 'green', 'blue', 'orange', 'gray', 'purple', 'red', 'cyan', 'magenta', 'yellow', 'black']
+    # cut colors to the number of entries
+    if len(entries) // 2 < len(colors):
+        colors = colors[:len(entries) // 2]
+    elif len(entries) // 2 > len(colors):
+        colors = colors * (len(entries) // 2 // len(colors) + 1)
+    # Create pairs of (path, name, color)
+    path_name_pairs = list(zip(entries[::2], entries[1::2], colors))
+
+    for path, name, color in path_name_pairs:
+        # get all the subfolders except zip folders from the path
+        log_folders = [os.path.join(path, subfolder) for subfolder in os.listdir(path) if os.path.isdir(os.path.join(path, subfolder)) and not subfolder.endswith('.zip')]
+        add_reward_plot(log_folders, name, color=color)
+    
+    # Finalize and show the plot
+    finalize_plot("Transfer Learning: 5x5 to 7x7 Crossing")
+    plt.show()

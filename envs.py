@@ -14,6 +14,7 @@ import numpy as np
 class Env(Enum):
     Minigrid_5x5 = "MiniGrid-Crossing-5x5-v0"
     Minigrid_7x7 = "MiniGrid-Crossing-7x7-v0"
+    Minigrid_9x9 = "MiniGrid-Crossing-9x9-v0"
     Minigrid_11x11 = "MiniGrid-Crossing-11x11-v0"
     Minigrid_15x15 = "MiniGrid-Crossing-15x15-v0"
     Minigrid_21x21 = "MiniGrid-Crossing-21x21-v0"
@@ -27,6 +28,10 @@ class MiniGridCrossing5x5(CrossingEnv):
 class MiniGridCrossing7x7(CrossingEnv):
     def __init__(self, **kwargs):
         super().__init__(size=7, num_crossings=0, **kwargs)
+
+class MiniGridCrossing9x9(CrossingEnv):
+    def __init__(self, **kwargs):
+        super().__init__(size=9, num_crossings=0, **kwargs)
 
 class MiniGridCrossing11x11(CrossingEnv):
     def __init__(self, **kwargs):
@@ -54,6 +59,11 @@ def register_envs():
     register(
         id=Env.Minigrid_7x7.value,
         entry_point='envs:MiniGridCrossing7x7',
+    )
+
+    register(
+        id=Env.Minigrid_9x9.value,
+        entry_point='envs:MiniGridCrossing9x9',
     )
 
     register(

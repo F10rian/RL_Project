@@ -23,10 +23,11 @@ def parse_args():
     parser.add_argument("--lr", type=float, default=5e-4, help="Learningrate")
     parser.add_argument("--env", type=str, choices=["MiniGrid-Crossing-5x5-v0", 
                                                     "MiniGrid-Crossing-7x7-v0",
+                                                    "MiniGrid-Crossing-9x9-v0",
                                                     "MiniGrid-Crossing-11x11-v0",
                                                     "MiniGrid-Crossing-15x15-v0",
                                                     "MiniGrid-Crossing-21x21-v0"],
-        help="Choose between MiniGrid-Crossing-5x5-v0, MiniGrid-Crossing-7x7-v0, MiniGrid-Crossing-11x11-v0, MiniGrid-Crossing-15x15-v0, MiniGrid-Crossing-21x21-v0",
+        help="Choose between MiniGrid-Crossing-5x5-v0, MiniGrid-Crossing-7x7-v0, MiniGrid-Crossing-9x9-v0, MiniGrid-Crossing-11x11-v0, MiniGrid-Crossing-15x15-v0, MiniGrid-Crossing-21x21-v0",
         default="MiniGrid-Crossing-5x5-v0")
     parser.add_argument("--batch_size", type=int, default=64, help="Batch size for training")
     parser.add_argument("--buffer_size", type=int, default=100000, help="Buffer size for experience replay")
@@ -39,6 +40,7 @@ def parse_args():
     parser.add_argument("--gamma", type=float, default=0.99, help="Discount factor for future rewards")
     parser.add_argument("--train_freq", type=int, default=4, help="Training frequency (number of steps between updates)")
     parser.add_argument("--target_update_interval", type=int, default=1000, help="Target network update interval")
+    parser.add_argument("--learning_starts", type=int, default=1000, help="Number of steps before starting to learn (buffer fill)")
 
     return parser.parse_args()
 
@@ -133,7 +135,7 @@ def train(
             exploration_initial_eps=model_params["exploration_initial_eps"],
             exploration_final_eps=model_params["exploration_final_eps"],
             exploration_fraction=model_params["exploration_fraction"],
-
+            learning_starts=model_params["learning_starts"],
             learning_rate=model_params["learning_rate"],  
             tau=model_params["tau"],
             gamma=model_params["gamma"],
@@ -163,7 +165,7 @@ def main():
     args = parse_args()
 
     for i in range(args.num_models):
-        file_name = "dqn_5x5_" + str(i)
+        file_name = args.env + str(i)
         print(f"Training model {i+1}/{args.num_models} in mode '{args.mode}'")
         model_params = dict(
             policy="CnnPolicy",
@@ -172,8 +174,9 @@ def main():
             exploration_initial_eps=args.exp_init_eps,
             exploration_final_eps=args.exp_final_eps,
             exploration_fraction=args.exp_fraction,
-
-            learning_rate=args.lr,  
+            steps=args.steps,
+            learning_rate=args.lr,
+            learning_starts=args.learning_starts,  
             tau=args.tau,
             gamma=args.gamma,
             train_freq=args.train_freq,
@@ -190,12 +193,12 @@ def main():
             save_model=True,
             saved_model_path=args.model_path, 
             output_filename=file_name,
-            output_dir="log_baseline_7x7",
+            output_dir=args.tensorboard_log,
             eval=args.eval)
 
         elif args.mode == "finetune":
             # Fine-tune from checkpoint
-            fine_tune_from_checkpoint(args.model_path, args.env)
+            fine_tune_from_checkpoint(args.model_path, args.env, model_params)
 
         elif args.mode == "finetune_sweep":
             # For sweep over all checkpoints
@@ -228,7 +231,7 @@ def main():
                 "log_baseline/dqn_5x5_18",
                 "log_baseline/dqn_5x5_19",
             ]
-            fine_tune_from_checkpoints(checkpoint_paths, args.env)
+            fine_tune_from_checkpoints(checkpoint_paths, args.env, model_params)
 
         else:
             print("Invalid mode. Please choose 'train', 'finetune' or 'finetune_sweep'.")
