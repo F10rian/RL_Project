@@ -4,11 +4,10 @@ from stable_baselines3.common.vec_env import VecTransposeImage
 from stable_baselines3.common.callbacks import EvalCallback
 from stable_baselines3.common.vec_env import DummyVecEnv
 import torch
-from dqn import create_dqn_model, get_policy_kwargs_cnn
+from dqn import DuelingCnnPolicy, create_dqn_model, get_policy_kwargs_cnn
 from envs import make_env, register_envs
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.env_util import make_vec_env
-
 
 
 def train(env_id, model, env):
@@ -135,31 +134,52 @@ def curriculum_learning(pretrained_model, env_ids):
         # Optional: Save checkpoint
         pretrained_model.save(f"dqn_cnn_{env_id}_curriculum")
 
-def fine_tune_from_checkpoint(checkpoint_path, env_id, index=0):
+def fine_tune_from_checkpoint(checkpoint_path, env_id, index=0, total_timesteps=100_000, output_path="dummy"):
     # Load the pretrained model
     pretrained_model = DQN.load(checkpoint_path)
 
+    # Create new 7x7 environment
     env = make_vec_env(lambda: make_env(env_id), n_envs=1)
 
-    # Create new model with correct input size
-    model = create_dqn_model(env, "CnnPolicy", get_policy_kwargs_cnn, batch_size=128, learning_rate=1e-4, exploration_fraction=0.8, exploration_initial_eps=0.8)
+    # Create new model with same architecture
+    model = create_dqn_model(
+        env,
+        policy="CnnPolicy", 
+        policy_function=get_policy_kwargs_cnn,
+        batch_size=512,
+        learning_rate=5e-5,  # lower learning rate for finetuning
+        exploration_initial_eps=0.3,  # reduce to preserve pre-learned policy
+        exploration_final_eps=0.1,
+        exploration_fraction=0.4,
+        buffer_size=300_000,
+        target_update_interval=2000,
+    )
 
-    # Transfer weights from previous model
+    # Transfer weights from pretrained 5x5 model
     model = transfer_weights_cnn(pretrained_model, model)
-    print(f"Transferred weights from {checkpoint_path} to new model for {env_id}")
+    print(f"✅ Transferred weights from {checkpoint_path} to new model for {env_id}")
 
-    # Optionally freeze early layers
-    # for name, param in new_model.policy.features_extractor.cnn.named_parameters():
+
+
+    # Freeze CNN layers (only linear layers will be trained)
+    # for param in model.policy.q_net.features_extractor.cnn.parameters():
     #     param.requires_grad = False
+    print("🔒 CNN layers frozen for first phase of fine-tuning.")
 
-    # Learn
-    model.learn(total_timesteps=80_000)
+    old_replay_buffer = pretrained_model.replay_buffer
 
-    # Update reference model for next stage
-    pretrained_model = model
+    # Before learning in new model
+    model.replay_buffer = old_replay_buffer  
 
-    # Optional: Save checkpoint
-    pretrained_model.save(f"dqn_cnn_{env_id}_from_checkpoint_{index}")
+    # Phase 1: Train with frozen CNN
+    model.learn(total_timesteps=total_timesteps, tb_log_name="transfer_5x5_to_7x7")
+
+
+    # model.learn(total_timesteps=phase2_steps, tb_log_name="transfer_5x5_to_7x7", reset_num_timesteps=False)
+
+    # Save final fine-tuned model
+    model.save(output_path)
+    print(f"✅ Fine-tuned model saved to: {output_path}")
 
 def fine_tune_from_checkpoints(checkpoint_paths, env_id):
     for i, checkpoint_path in enumerate(checkpoint_paths):
