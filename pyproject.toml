@@ -10,4 +10,5 @@ dependencies = [
     "stable-baselines3[extra]>=2.6.0",
     "tbparse>=0.0.9",
     "tensorboard>=2.20.0",
+    "scipy>=1.16.1"
 ]
