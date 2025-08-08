@@ -1,6 +1,6 @@
 # Grid World Transfer Learning -​ from Small to Big Challenges
 
-<img src="images/Figure_3.png" width="512">
+<img src="images/Mean_running_max.png" width="512">
 
 This project strides toward showing the power of Transfer Learning. And how Transfer Learning can save computation time if models trained on lower complexity enviroments are available. In our example we chose the [Crossing](https://minigrid.farama.org/environments/minigrid/CrossingEnv/) env from [MiniGrid](https://minigrid.farama.org/). As the agent we choose the preimplemented [DQN Agent](https://stable-baselines3.readthedocs.io/en/master/modules/dqn.html) from [Stable Baselines3](https://stable-baselines3.readthedocs.io/en/master/index.html) and inserted our own Neural Network into it.
 
@@ -69,7 +69,7 @@ python plotting/plot_mean_running_max.py log_baseline_5x5 "5x5 baseline" log_bas
 
 <img src="images/Network.png" width="256">
 
-This is the Network architecture of our DQN. The terminolagy for Conv layers is Conv(Kernel size, Feature Maps Out), AdaptiveAvgPooling means a pooling from dimensions of [h, w, x] to [k, k, x] with k beeing the input of AadptiveAvgPooling. 
+This is the Network architecture of our DQN. The terminolagy for Conv layers is Conv(Kernel size, Feature Maps Out), AdaptiveAvgPooling means a pooling from dimensions of [h, w, x] to [k, k, x] with k beeing the input of AadptiveAvgPooling. Input to the entwork is a representation of the env and output is the 7 possible actions (from which only 3 are used in this env).
 
 
 ### Using uv
