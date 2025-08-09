@@ -20,7 +20,7 @@ def parse_args():
     parser.add_argument("--model_path", type=str, default=None, help="Path to the pre-trained model for fine-tuning")
     parser.add_argument("--steps", type=int, default=100000, help="Number of training steps")
     parser.add_argument("--eval", action='store_true', help="Evaluate the model after training", default=False)
-    parser.add_argument("--lr", type=float, default=5e-4, help="Learningrate")
+    parser.add_argument("--lr", type=float, default=1e-4, help="Learningrate")
     parser.add_argument("--env", type=str, choices=["MiniGrid-Crossing-5x5-v0", 
                                                     "MiniGrid-Crossing-7x7-v0",
                                                     "MiniGrid-Crossing-9x9-v0",
@@ -30,10 +30,10 @@ def parse_args():
         help="Choose between MiniGrid-Crossing-5x5-v0, MiniGrid-Crossing-7x7-v0, MiniGrid-Crossing-9x9-v0, MiniGrid-Crossing-11x11-v0, MiniGrid-Crossing-15x15-v0, MiniGrid-Crossing-21x21-v0",
         default="MiniGrid-Crossing-5x5-v0")
     parser.add_argument("--batch_size", type=int, default=64, help="Batch size for training")
-    parser.add_argument("--buffer_size", type=int, default=100000, help="Buffer size for experience replay")
-    parser.add_argument("--exp_init_eps", type=float, default=1.0, help="Initial exploration rate")
+    parser.add_argument("--buffer_size", type=int, default=50_000, help="Buffer size for experience replay")
+    parser.add_argument("--exp_init_eps", type=float, default=0.8, help="Initial exploration rate")
     parser.add_argument("--exp_final_eps", type=float, default=0.1, help="Final exploration rate")
-    parser.add_argument("--exp_fraction", type=float, default=0.8, help="Fraction of training for exploration")
+    parser.add_argument("--exp_fraction", type=float, default=0.6, help="Fraction of training for exploration")
     parser.add_argument("--verbose", type=int, default=1, help="Verbosity level (0: no output, 1: info, 2: debug)")
     parser.add_argument("--tensorboard_log", type=str, default="./dqn_crossing_tensorboard/", help="TensorBoard log directory")
     parser.add_argument("--tau", type=float, default=1.0, help="Soft update coefficient")
