@@ -7,14 +7,13 @@ class BestTrainingRewardCallback(BaseCallback):
     Save the model when the mean training episode reward improves.
     This does NOT run extra evaluation episodes, only uses training data.
     """
-    def __init__(self, save_path, save_freq=1000, window_size=100, verbose=1):
+    def __init__(self, save_path, save_freq=1000, window_size=10, verbose=1):
         super().__init__(verbose)
         self.save_path = save_path
         self.save_freq = save_freq
         self.window_size = window_size
         self.best_mean_reward = -np.inf
         self.episode_rewards = []
-        print("---------------------- BestTrainingRewardCallback created")
 
     def _on_step(self) -> bool:
         # Collect episode rewards from training

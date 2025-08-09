@@ -143,7 +143,7 @@ def train(
             tensorboard_log=model_params["tensorboard_log"],
         )
 
-    call_back = BestTrainingRewardCallback(output_filename, save_freq=1000, window_size=100, verbose=model_params["verbose"])
+    call_back = BestTrainingRewardCallback(output_filename, save_freq=1000, window_size=10, verbose=model_params["verbose"])
 
     # Learn and save best model
     model.learn(total_timesteps=model_params["steps"], callback=call_back)

@@ -198,7 +198,7 @@ def fine_tune_from_checkpoint(checkpoint_path, env_id, model_params, index=0):
 
     save_path = f"{model_params["tensorboard_log"]}/dqn_cnn_{env_id}_from_checkpoint_{index}"
 
-    call_back = BestTrainingRewardCallback(save_path, save_freq=1000, window_size=100, verbose=model_params["verbose"])
+    call_back = BestTrainingRewardCallback(save_path, save_freq=1000, window_size=10, verbose=model_params["verbose"])
 
     # Learn and save best model
     model.learn(total_timesteps=model_params["steps"], callback=call_back)
