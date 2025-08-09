@@ -3,7 +3,7 @@ import gymnasium as gym
 from stable_baselines3 import DQN
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.evaluation import evaluate_policy
-from render_callback import checkpoint_callback
+from render_callback import checkpoint_callback, get_eval_callback
 
 from envs import make_env, register_envs
 from learning import curriculum_learning, transfer_feature_extractor, fine_tune_from_checkpoints, fine_tune_from_checkpoint
@@ -113,11 +113,9 @@ def eval_model(model, env):
 def train(
         env_id, 
         model_params=None,
-        save_model=False,
         saved_model_path=None, 
         output_filename="dummy",
         output_dir="log_runs",
-        eval=False,
     ):
     # Vectorized enviroment (usefull for parallel environments)
     register_envs()
@@ -144,20 +142,10 @@ def train(
             tensorboard_log=model_params["tensorboard_log"],
         )
 
-    # Training
-    model.learn(total_timesteps=model_params["steps"],)
+    eval_callback = get_eval_callback(env_id, save_path=output_filename)
 
-    # Evaluation
-    if eval:
-        eval_model(model, env)
-    
-    # Modell speichern
-    if save_model:
-        model.save(f"{output_dir}/{output_filename}")
-
-    # Evaluation
-    if eval:
-        eval_model(model, env)
+    # Learn and save best model
+    model.learn(total_timesteps=model_params["steps"], callback=eval_callback)
 
 
 def main():
@@ -188,11 +176,9 @@ def main():
             # Train the model
             train(env_id=args.env,
             model_params=model_params,
-            save_model=True,
             saved_model_path=args.model_path, 
             output_filename=file_name,
-            output_dir=args.tensorboard_log,
-            eval=args.eval)
+            output_dir=args.tensorboard_log,)
 
         elif args.mode == "finetune":
             # Fine-tune from checkpoint

@@ -8,7 +8,7 @@ from dqn import get_policy_kwargs_cnn
 from envs import make_env, register_envs
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.env_util import make_vec_env
-
+from render_callback import get_eval_callback
 
 
 def train(env_id, model, env):
@@ -165,8 +165,9 @@ def curriculum_learning(pretrained_model, env_ids):
 def fine_tune_from_checkpoint(checkpoint_path, env_id, model_params, index=0):
     # Load the pretrained model
     pretrained_model = DQN.load(checkpoint_path)
-    # Load the pretrained model
+
     register_envs()
+    # Load the pretrained model
     env = make_vec_env(lambda: make_env(env_id), n_envs=1)
 
     # Create new model with correct input size
@@ -194,10 +195,12 @@ def fine_tune_from_checkpoint(checkpoint_path, env_id, model_params, index=0):
     transfer_feature_extractor(pretrained_model, model)
     print(f"Transferred weights from {checkpoint_path} to new model for {env_id}")
 
-    # Learn
-    model.learn(total_timesteps=model_params["steps"])
-    # Optional: Save checkpoint
-    pretrained_model.save(f"{model_params["tensorboard_log"]}/dqn_cnn_{env_id}_from_checkpoint_{index}")
+    save_path = f"{model_params["tensorboard_log"]}/dqn_cnn_{env_id}_from_checkpoint_{index}"
+
+    eval_callback = get_eval_callback(env_id, save_path=save_path)
+
+    # Learn and save best model
+    model.learn(total_timesteps=model_params["steps"], callback=eval_callback)
 
 def fine_tune_from_checkpoints(checkpoint_paths, env_id, model_params):
     for i, checkpoint_path in enumerate(checkpoint_paths):
