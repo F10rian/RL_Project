@@ -44,6 +44,7 @@ def compute_mann_whitney_u_test(path_1, path_2):
     return u_statistic, p_value
 
 
+
 if __name__ == "__main__":
     compute_mann_whitney_u_test("./log_baseline_7x7", "./transfer_5x5_to_7x7")
 

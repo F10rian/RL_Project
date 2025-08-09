@@ -2,7 +2,33 @@ import glob
 import os
 import numpy as np
 
+import numpy as np
+from scipy.interpolate import interp1d
+from scipy.integrate import quad
+from scipy.optimize import brentq
+
 from tensorboard.backend.event_processing import event_accumulator
+
+from plot_stats import print_results
+
+
+def make_cubic_function(x, y, curve_kind="cubic", steps=200):
+    functions = []
+    for xi, yi in zip(x, y):
+        func = interp1d(xi, yi, kind=curve_kind)
+        functions.append(func)
+
+    min_x = max(xi[0] for xi in x)
+    max_x = min(xi[-1] for xi in x)
+    x_common = np.linspace(min_x, max_x, steps)
+
+    # calculate mean values
+    values = np.vstack([func(x_common) for func in functions])
+    mean_values = np.mean(values, axis=0)
+
+    # calculate mean function
+    mean_function = interp1d(x_common, mean_values, kind=curve_kind)
+    return mean_function
 
 
 def get_max_step_from_first_event_file(paths, metric) -> int:
@@ -18,7 +44,6 @@ def get_max_step_from_first_event_file(paths, metric) -> int:
         x_max_list.append(x)
 
     max_steps = min(x_max_list)
-
     return max_steps
 
 
@@ -76,58 +101,61 @@ def load_model_logs(
 
         except Exception as e:
             print(f"Failed to process {event_file}: {e}")
+
     return x_trunc_list, y_trunc_list
 
 
-def build_auc_distribution(
-    x_values,
-    y_values
-):
-    """
-    Computes truncated AUC over step range [0, max_steps] for each run.
-    """
-    aucs = []
-    for x_trunc, y_trunc in zip(x_values, y_values):
-        auc = np.trapezoid(y_trunc, x_trunc)
-        aucs.append(auc)
-    return aucs
+def calculate_sample_efficiency(mean_func):
+    a, b = mean_func.x[0], mean_func.x[-1]
+    auc, _ = quad(mean_func, a, b)
+    return auc
 
 
-def calculate_sample_efficiency(x_values, y_values):
-    aucs = build_auc_distribution(x_values=x_values, y_values=y_values)
-    return np.mean(aucs)
+def calculate_final_performance(mean_func):
+    return mean_func.y.max()
 
 
-def calculate_final_performance(y_values):
-    max_rewards = []
-    for y in y_values:
-        max_rewards.append(np.max(y))
-    return np.mean(max_rewards)
+def get_x_for_given_y(f, y_target):
+    x_data = np.asarray(f.x)
+    y_data = np.asarray(f.y)
+
+    # Case 1: never reaches target
+    if np.all(y_data < y_target):
+        return None
+
+    # Case 2: already above/equal at start
+    if y_data[0] >= y_target:
+        return float(x_data[0])
+
+    # Case 3: find first crossing interval
+    for i in range(1, len(y_data)):
+        if y_data[i] >= y_target:
+            x_low, x_high = x_data[i-1], x_data[i]
+            g = lambda x: f(x) - y_target
+            return float(brentq(g, x_low, x_high))
+
+    return None
 
 
-def calculate_convergence_speed(baseline_x_values, baseline_y_values, transfer_x_values, transfer_y_values):
-    mean_baseline_y_values = np.mean(np.array(baseline_y_values), axis=0)
-    mean_baseline_x_values = np.mean(np.array(baseline_x_values), axis=0)
-    
-    baseline_max_idx = np.argmax(mean_baseline_y_values)
-    baseline_x = mean_baseline_x_values[baseline_max_idx]
-    baseline_y = mean_baseline_y_values[baseline_max_idx]
+
+def calculate_convergence_speed(baseline_func, transfer_funcs):
+    x_grid = np.linspace(baseline_func.x.min(), baseline_func.x.max(), 1000)
+    y_grid = baseline_func(x_grid)
+
+    idx_max = np.argmax(y_grid)
+    bl_x_at_max = int(x_grid[idx_max])
+    bl_y_at_max = y_grid[idx_max]
 
     exceeding_baseline_vals = []
 
-    for x_values, y_values in zip(transfer_x_values, transfer_y_values):
-        mean_x_values = np.mean(x_values)
-        mean_y_values = np.mean(y_values)
-
-
-        idx = np.argmax(mean_y_values > baseline_y)
-
-        if idx == 0:
+    for transfer_func in transfer_funcs:
+        x_at_max = get_x_for_given_y(transfer_func, bl_y_at_max)
+        if x_at_max is None:
             exceeding_baseline_vals.append(-1)
         else:
-            exceeding_baseline_vals.append(mean_x_values[idx])
+            exceeding_baseline_vals.append(int(x_at_max))
 
-    return baseline_x, baseline_y, exceeding_baseline_vals
+    return bl_x_at_max, bl_y_at_max, exceeding_baseline_vals
 
 
 def main():
@@ -141,53 +169,42 @@ def main():
 
     baseline_x_values, baseline_y_values = load_model_logs(baseline_model_path, "rollout/ep_rew_mean", max_steps=max_steps, use_running_max=False)
 
-    baseline_avg_max_reward = calculate_final_performance(y_values=baseline_y_values)
-    baseline_mean_auc_reward = calculate_sample_efficiency(x_values=baseline_x_values, y_values=baseline_y_values)
+    baseline_mean_function = make_cubic_function(x=baseline_x_values, y=baseline_y_values)
+
+    baseline_avg_max_reward = calculate_final_performance(mean_func=baseline_mean_function)
+    baseline_mean_auc_reward = calculate_sample_efficiency(mean_func=baseline_mean_function)
     avg_max_rewards = []
     mean_auc_rewards = []
+
+    model_mean_functions = []
 
     for model_path in model_paths:
         x_values, y_values = load_model_logs(model_path, "rollout/ep_rew_mean", max_steps=max_steps, use_running_max=False)
 
-        avg_max_rewards.append(calculate_final_performance(y_values=y_values))
-        mean_auc_rewards.append(calculate_sample_efficiency(x_values=x_values, y_values=y_values))
+        model_mean_function = make_cubic_function(x=x_values, y=y_values)
+        model_mean_functions.append(model_mean_function)
+
+        avg_max_rewards.append(calculate_final_performance(mean_func=model_mean_function))
+        mean_auc_rewards.append(calculate_sample_efficiency(mean_func=model_mean_function))
 
     baseline_x, baseline_y, exceeding_baseline_x_vals = calculate_convergence_speed(
-        baseline_x_values=baseline_x_values,
-        baseline_y_values=baseline_y_values,
-        transfer_x_values=x_values,
-        transfer_y_values=y_values
+        baseline_func=baseline_mean_function,
+        transfer_funcs=model_mean_functions
     )
-    print_results(model_names, avg_max_rewards, mean_auc_rewards, exceeding_baseline_x_vals, baseline_x, baseline_y, baseline_avg_max_reward, baseline_mean_auc_reward)
+    print_results(
+        model_names=model_names,
+        average_max_reward=avg_max_rewards,
+        mean_auc_reward=mean_auc_rewards,
+        exceeding_baseline_x_vals=exceeding_baseline_x_vals,    
+        baseline_x=baseline_x,
+        baseline_y=baseline_y,
+        baseline_avg_max_reward=baseline_avg_max_reward,
+        baseline_mean_auc_reward=baseline_mean_auc_reward
+    )
     
-
-
-
-def print_results(model_names, average_max_reward, mean_auc_reward, exceeding_baseline_x_vals, baseline_x, baseline_y, baseline_avg_max_reward, baseline_mean_auc_reward):
-
-    # Print header
-    print("\n📊 Model Comparison Table")
-    print("| Model                    | Final Performance (avg max reward) | Sample Efficiency (mean AUC reward) | Exceeding Baseline (x where reward > baseline y) |")
-    print("|--------------------------|------------------------------------|-------------------------------------|--------------------------------------------------|")
-
-    # Print baseline row
-    print(f"| Baseline (7x7)           | {baseline_avg_max_reward:.2f}                          | {baseline_mean_auc_reward:.2f}                          | Threshold: {baseline_y:.2f} @ step {baseline_x:.0f}           |")
-
-    # Print each transfer model row (in case of multiple in future)
-    for model_name, avg_max, auc, exceed_vals in zip(
-        model_names,
-        average_max_reward,
-        mean_auc_reward,
-        exceeding_baseline_x_vals
-    ):
-        exceed_str = ", ".join([f"{x:.0f}" if x != -1 else "N/A" for x in exceed_vals])
-        print(f"| {model_name:<25} | {avg_max:.2f}                          | {auc:.2f}                          | {exceed_str} |")
-
-
-
-
 
 
 if __name__ == "__main__":
     main()
+
 
