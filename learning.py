@@ -10,6 +10,8 @@ from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.env_util import make_vec_env
 from render_callback import get_eval_callback
 
+from best_training_reward_callback import BestTrainingRewardCallback
+
 
 def train(env_id, model, env):
     eval_env = DummyVecEnv([lambda: make_env(env_id)])
@@ -166,7 +168,6 @@ def fine_tune_from_checkpoint(checkpoint_path, env_id, model_params, index=0):
     # Load the pretrained model
     pretrained_model = DQN.load(checkpoint_path)
 
-    register_envs()
     # Load the pretrained model
     env = make_vec_env(lambda: make_env(env_id), n_envs=1)
 
@@ -197,10 +198,10 @@ def fine_tune_from_checkpoint(checkpoint_path, env_id, model_params, index=0):
 
     save_path = f"{model_params["tensorboard_log"]}/dqn_cnn_{env_id}_from_checkpoint_{index}"
 
-    eval_callback = get_eval_callback(env_id, save_path=save_path)
+    call_back = BestTrainingRewardCallback(save_path, save_freq=1000, window_size=100, verbose=model_params["verbose"])
 
     # Learn and save best model
-    model.learn(total_timesteps=model_params["steps"], callback=eval_callback)
+    model.learn(total_timesteps=model_params["steps"], callback=call_back)
 
 def fine_tune_from_checkpoints(checkpoint_paths, env_id, model_params):
     for i, checkpoint_path in enumerate(checkpoint_paths):

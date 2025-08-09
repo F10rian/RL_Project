@@ -22,8 +22,7 @@ checkpoint_callback = CheckpointCallback(
 )
 
 def get_eval_callback(env_id, save_path="./"):
-    eval_env = DummyVecEnv([lambda: make_env(env_id)])
-
+    eval_env = DummyVecEnv([lambda: make_env(env_id)])  # New, clean eval env
     # Define callback for saving best model
     eval_callback = EvalCallback(
         eval_env,
