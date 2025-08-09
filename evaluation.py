@@ -106,38 +106,82 @@ def calculate_final_performance(y_values):
 
 
 def calculate_convergence_speed(baseline_x_values, baseline_y_values, transfer_x_values, transfer_y_values):
-    baseline_max_idx = np.argmax(baseline_y_values)
-    baseline_x = baseline_x_values[baseline_max_idx]
-    baseline_y = baseline_y_values[baseline_max_idx]
+    mean_baseline_y_values = np.mean(np.array(baseline_y_values), axis=0)
+    mean_baseline_x_values = np.mean(np.array(baseline_x_values), axis=0)
+    
+    baseline_max_idx = np.argmax(mean_baseline_y_values)
+    baseline_x = mean_baseline_x_values[baseline_max_idx]
+    baseline_y = mean_baseline_y_values[baseline_max_idx]
 
     exceeding_baseline_vals = []
 
-    for x_val, y_val in zip(transfer_x_values, transfer_y_values):
-        idx = np.argmax(y_val > baseline_y)
+    for x_values, y_values in zip(transfer_x_values, transfer_y_values):
+        mean_x_values = np.mean(x_values)
+        mean_y_values = np.mean(y_values)
+
+
+        idx = np.argmax(mean_y_values > baseline_y)
 
         if idx == 0:
             exceeding_baseline_vals.append(-1)
         else:
-            exceeding_baseline_vals.append(x_val[idx])
+            exceeding_baseline_vals.append(mean_x_values[idx])
 
-    return baseline_x, exceeding_baseline_vals
+    return baseline_x, baseline_y, exceeding_baseline_vals
 
 
 def main():
+    model_names = ["Baseline 7x7", "Transfer (5x5 → 7x7)"]
     model_paths = [
-        "./log_baseline_7x7",
         "./transfer_5x5_to_7x7"
     ]
+    baseline_model_path = "./log_baseline_7x7"
 
-    max_steps = get_max_step_from_first_event_file(model_paths, "rollout/ep_rew_mean")
+    max_steps = get_max_step_from_first_event_file(model_paths + [baseline_model_path], "rollout/ep_rew_mean")
+
+    baseline_x_values, baseline_y_values = load_model_logs(baseline_model_path, "rollout/ep_rew_mean", max_steps=max_steps, use_running_max=False)
+
+    baseline_avg_max_reward = calculate_final_performance(y_values=baseline_y_values)
+    baseline_mean_auc_reward = calculate_sample_efficiency(x_values=baseline_x_values, y_values=baseline_y_values)
+    avg_max_rewards = []
+    mean_auc_rewards = []
 
     for model_path in model_paths:
         x_values, y_values = load_model_logs(model_path, "rollout/ep_rew_mean", max_steps=max_steps, use_running_max=False)
 
-        average_max_reward = calculate_final_performance(y_values=y_values)
+        avg_max_rewards.append(calculate_final_performance(y_values=y_values))
+        mean_auc_rewards.append(calculate_sample_efficiency(x_values=x_values, y_values=y_values))
+
+    baseline_x, baseline_y, exceeding_baseline_x_vals = calculate_convergence_speed(
+        baseline_x_values=baseline_x_values,
+        baseline_y_values=baseline_y_values,
+        transfer_x_values=x_values,
+        transfer_y_values=y_values
+    )
+    print_results(model_names, avg_max_rewards, mean_auc_rewards, exceeding_baseline_x_vals, baseline_x, baseline_y, baseline_avg_max_reward, baseline_mean_auc_reward)
+    
 
 
 
+def print_results(model_names, average_max_reward, mean_auc_reward, exceeding_baseline_x_vals, baseline_x, baseline_y, baseline_avg_max_reward, baseline_mean_auc_reward):
+
+    # Print header
+    print("\n📊 Model Comparison Table")
+    print("| Model                    | Final Performance (avg max reward) | Sample Efficiency (mean AUC reward) | Exceeding Baseline (x where reward > baseline y) |")
+    print("|--------------------------|------------------------------------|-------------------------------------|--------------------------------------------------|")
+
+    # Print baseline row
+    print(f"| Baseline (7x7)           | {baseline_avg_max_reward:.2f}                          | {baseline_mean_auc_reward:.2f}                          | Threshold: {baseline_y:.2f} @ step {baseline_x:.0f}           |")
+
+    # Print each transfer model row (in case of multiple in future)
+    for model_name, avg_max, auc, exceed_vals in zip(
+        model_names,
+        average_max_reward,
+        mean_auc_reward,
+        exceeding_baseline_x_vals
+    ):
+        exceed_str = ", ".join([f"{x:.0f}" if x != -1 else "N/A" for x in exceed_vals])
+        print(f"| {model_name:<25} | {avg_max:.2f}                          | {auc:.2f}                          | {exceed_str} |")
 
 
 
