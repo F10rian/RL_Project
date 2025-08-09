@@ -71,18 +71,53 @@ def transfer_weights_linear(pretrained_model, model):
     model.policy.load_state_dict(new_state_dict)
     return model
 
-def transfer_weights_cnn(pretrained_model, model):
-    pretrained_state_dict = pretrained_model.policy.state_dict()
-    new_state_dict = model.policy.state_dict()
+def transfer_feature_extractor(pretrained_model, model):
+    """
+    Transfer all feature extractor weights from pretrained model to new model.
+    This will copy all compatible layers and report what was transferred.
+    """
+    # Get feature extractor state dicts
+    pretrained_features_dict = pretrained_model.policy.q_net.features_extractor.state_dict()
+    pretrained_features_dict_target = pretrained_model.policy.q_net_target.features_extractor.state_dict()
+    
+    # Load feature extractor weights into new model
+    model.policy.q_net.features_extractor.load_state_dict(pretrained_features_dict)
 
-    pretrained_cnn = pretrained_model.policy.q_net.features_extractor.cnn.state_dict() and pretrained_model.policy.q_net_target.features_extractor.cnn.state_dict()
-    # Load updated state_dict
-    model.policy.load_state_dict(pretrained_cnn, strict=False)
+    # Also update target network to match
+    model.policy.q_net_target.features_extractor.load_state_dict(pretrained_features_dict_target)
+    
+    # Report results
+    print(f"  - Transferred {len(pretrained_features_dict)} layers")
+    for layer_name in list(pretrained_features_dict.keys())[:]:
+        print(f"{layer_name}")
+    
+    return model
+
+
+def transfer_cnn_only(pretrained_model, model):
+    """
+    Transfer only the CNN feature extractor weights (recommended for transfer learning).
+    This preserves the Q-network head for the new environment.
+    """
+    # Get CNN weights from both models
+    pretrained_cnn_dict = pretrained_model.policy.q_net.features_extractor.cnn.state_dict()
+    
+    # Load CNN weights into new model's feature extractor
+    model.policy.q_net.features_extractor.cnn.load_state_dict(pretrained_cnn_dict)
+    
+    # Also load into target network
+    model.policy.q_net_target.features_extractor.cnn.load_state_dict(pretrained_cnn_dict)
+    
+    print("✅ Transferred CNN feature extractor weights")
+    print(f"  - Transferred {len(pretrained_cnn_dict)} CNN layers")
+    
     return model
 
 
 def curriculum_learning(pretrained_model, env_ids):
-
+    """
+    Curriculum learning function that progressively trains on different environments.
+    """
     # === Step 2: Curriculum Training Loop ===
     
     for env_id in env_ids:
@@ -112,7 +147,7 @@ def curriculum_learning(pretrained_model, env_ids):
         )
 
         # Transfer weights from previous model
-        transfer_weights_cnn(pretrained_model, model)
+        transfer_feature_extractor(pretrained_model, model)
 
         # Optionally freeze early layers
         # for name, param in new_model.policy.features_extractor.cnn.named_parameters():
@@ -154,8 +189,9 @@ def fine_tune_from_checkpoint(checkpoint_path, env_id, model_params, index=0):
         exploration_fraction=model_params["exploration_fraction"],
     )
 
+
     # Transfer weights from previous model
-    transfer_weights_cnn(pretrained_model, model)
+    transfer_feature_extractor(pretrained_model, model)
     print(f"Transferred weights from {checkpoint_path} to new model for {env_id}")
 
     # Learn

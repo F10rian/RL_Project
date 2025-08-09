@@ -6,7 +6,7 @@ from stable_baselines3.common.evaluation import evaluate_policy
 from render_callback import checkpoint_callback
 
 from envs import make_env, register_envs
-from learning import curriculum_learning, transfer_weights_cnn, fine_tune_from_checkpoints, fine_tune_from_checkpoint
+from learning import curriculum_learning, transfer_feature_extractor, fine_tune_from_checkpoints, fine_tune_from_checkpoint
 from network import MiniGridCNN, MiniGridLinear
 from envs import Env
 
@@ -95,7 +95,7 @@ def load_model(model_path, env):
 
 
 def curiculum_learning(pretrained_model, env_ids):
-    model = transfer_weights_cnn(pretrained_model, model)
+    model = transfer_feature_extractor(pretrained_model, model)
     CURRICULUM_ENVS = [
         Env.Minigrid_7x7.value,
         Env.Minigrid_11x11.value,
@@ -112,7 +112,6 @@ def eval_model(model, env):
 
 def train(
         env_id, 
-        total_timesteps,
         model_params=None,
         save_model=False,
         saved_model_path=None, 
@@ -146,7 +145,7 @@ def train(
         )
 
     # Training
-    model.learn(total_timesteps=total_timesteps)
+    model.learn(total_timesteps=model_params["steps"],)
 
     # Evaluation
     if eval:
@@ -188,7 +187,6 @@ def main():
         if args.mode == "train":
             # Train the model
             train(env_id=args.env,
-            total_timesteps=args.steps,
             model_params=model_params,
             save_model=True,
             saved_model_path=args.model_path, 
@@ -202,34 +200,27 @@ def main():
 
         elif args.mode == "finetune_sweep":
             # For sweep over all checkpoints
-            """checkpoint_paths = [
-                "trained_models/dqn_5x5_cnn_interval__40000_steps",
-                "trained_models/dqn_5x5_cnn_interval__80000_steps",
-                "trained_models/dqn_5x5_cnn_interval__120000_steps",
-                "trained_models/dqn_5x5_cnn_interval__160000_steps",
-                "trained_models/dqn_5x5_cnn_interval__200000_steps"
-            ]"""
             checkpoint_paths = [
-                "log_baseline/dqn_5x5_0",
-                "log_baseline/dqn_5x5_1",
-                "log_baseline/dqn_5x5_2",
-                "log_baseline/dqn_5x5_3",
-                "log_baseline/dqn_5x5_4",
-                "log_baseline/dqn_5x5_5",
-                "log_baseline/dqn_5x5_6",
-                "log_baseline/dqn_5x5_7",
-                "log_baseline/dqn_5x5_8",
-                "log_baseline/dqn_5x5_9",
-                "log_baseline/dqn_5x5_10",
-                "log_baseline/dqn_5x5_11",
-                "log_baseline/dqn_5x5_12",
-                "log_baseline/dqn_5x5_13",
-                "log_baseline/dqn_5x5_14",
-                "log_baseline/dqn_5x5_15",
-                "log_baseline/dqn_5x5_16",
-                "log_baseline/dqn_5x5_17",
-                "log_baseline/dqn_5x5_18",
-                "log_baseline/dqn_5x5_19",
+                "log_baseline_5x5/dqn_5x5_0",
+                "log_baseline_5x5/dqn_5x5_1",
+                "log_baseline_5x5/dqn_5x5_2",
+                "log_baseline_5x5/dqn_5x5_3",
+                "log_baseline_5x5/dqn_5x5_4",
+                "log_baseline_5x5/dqn_5x5_5",
+                "log_baseline_5x5/dqn_5x5_6",
+                "log_baseline_5x5/dqn_5x5_7",
+                "log_baseline_5x5/dqn_5x5_8",
+                "log_baseline_5x5/dqn_5x5_9",
+                "log_baseline_5x5/dqn_5x5_10",
+                "log_baseline_5x5/dqn_5x5_11",
+                "log_baseline_5x5/dqn_5x5_12",
+                "log_baseline_5x5/dqn_5x5_13",
+                "log_baseline_5x5/dqn_5x5_14",
+                "log_baseline_5x5/dqn_5x5_15",
+                "log_baseline_5x5/dqn_5x5_16",
+                "log_baseline_5x5/dqn_5x5_17",
+                "log_baseline_5x5/dqn_5x5_18",
+                "log_baseline_5x5/dqn_5x5_19",
             ]
             fine_tune_from_checkpoints(checkpoint_paths, args.env, model_params)
 

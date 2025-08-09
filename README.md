@@ -39,7 +39,7 @@ uv sync
 
 From scratch training (Baseline):
 ```bash
-python test2.py --mode train --env MiniGrid-Crossing-5x5-v0 --tensorboard_log log_baseline_5x5
+python test2.py --mode train --env MiniGrid-Crossing-5x5-v0 --tensorboard_log log_baseline_5x5 --num_models 20
 ```
 
 Fine Tuning (model_path is required):
@@ -49,7 +49,7 @@ python test2.py --mode finetune --env MiniGrid-Crossing-7x7-v0 --model_path log_
 
 Fine Tuning sweep (the sweep list is hardcoded in test2, those are the models):
 ```bash
-python test2.py --mode finetune_sweep --env MiniGrid-Crossing-7x7-v0
+python test2.py --mode finetune_sweep --env MiniGrid-Crossing-7x7-v0 --tensorboard_log log_transfer_5x5_to_7x7
 ```
 
 # Ploting
