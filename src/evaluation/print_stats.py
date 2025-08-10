@@ -1,5 +1,3 @@
-
-
 def print_results(model_names, average_max_reward, mean_auc_reward, exceeding_baseline_x_vals, baseline_x, baseline_y, baseline_avg_max_reward, baseline_mean_auc_reward):
 
     # Print header

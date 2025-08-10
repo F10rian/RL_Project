@@ -1,8 +1,7 @@
-
 from matplotlib import pyplot as plt
 from scipy.stats import mannwhitneyu
 
-from evaluation import build_auc_distribution, get_max_step_from_first_event_file, load_model_logs
+from evaluation.evaluation import build_auc_distribution, get_max_step_from_first_event_file, load_model_logs
 
 
 def compute_mann_whitney_u_test(path_1, path_2):

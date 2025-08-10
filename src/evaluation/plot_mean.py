@@ -7,21 +7,7 @@ import argparse
 import sys
 
 from scipy.interpolate import interp1d
-
-def make_cubic_function(x, y, curve_kind="cubic", steps=200):
-    functions = []
-    for xi, yi in zip(x, y):
-        func = interp1d(xi, yi, kind=curve_kind)
-        functions.append(func)
-
-    min_x = max(xi[0] for xi in x)
-    max_x = min(xi[-1] for xi in x)
-    x_common = np.linspace(min_x, max_x, steps)
-
-    # calculate mean values
-    values = np.vstack([func(x_common) for func in functions])
-
-    return values
+from evaluation_helper import make_cubic_function
 
 
 def add_reward_plot(log_folders, label, color=None, alpha=0.3):
