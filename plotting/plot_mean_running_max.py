@@ -5,6 +5,23 @@ import os
 import argparse
 import sys
 
+from scipy.interpolate import interp1d
+
+def make_cubic_function(x, y, curve_kind="cubic", steps=200):
+    functions = []
+    for xi, yi in zip(x, y):
+        func = interp1d(xi, yi, kind=curve_kind)
+        functions.append(func)
+
+    min_x = max(xi[0] for xi in x)
+    max_x = min(xi[-1] for xi in x)
+    x_common = np.linspace(min_x, max_x, steps)
+
+    # calculate mean values
+    values = np.vstack([func(x_common) for func in functions])
+
+    return values
+
 def add_reward_plot(log_folders, label, color=None, alpha=0.3):
     """
     Add reward data from multiple log folders to the current plot.
@@ -42,21 +59,18 @@ def add_reward_plot(log_folders, label, color=None, alpha=0.3):
         except Exception as e:
             print(f"Error reading {folder}: {e}")
 
-    if not all_rewards:
-        print(f"No reward data found in any folder for '{label}'!")
-        return
-
-    # Find common step range
-    min_steps = min(len(steps) for steps in all_steps)
-    print(f"Using first {min_steps} steps for analysis of '{label}'")
+    values = make_cubic_function(all_steps, all_rewards, curve_kind="cubic", steps=200)
+    print(values.shape)
 
     # Align all data to same step count and calculate running max
     aligned_running_max = []
-    common_steps = all_steps[0][:min_steps]
+    common_steps = np.linspace(1, 100001, 200)  # 1000 points to match values.shape
 
-    for i, rewards in enumerate(all_rewards):
+    #print(values[0])
+
+    for i, rewards in enumerate(values):
         # Calculate running maximum for this run
-        running_max = np.maximum.accumulate(rewards[:min_steps])
+        running_max = np.maximum.accumulate(rewards)
         aligned_running_max.append(running_max)
 
     # Convert to numpy array for easier calculation
