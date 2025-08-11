@@ -86,7 +86,7 @@ def add_reward_plot(log_folders, label, color=None, alpha=0.3):
     plt.fill_between(common_steps, percentile_2_5, percentile_97_5, alpha=alpha, 
                      color=color)  # Remove label to exclude from legend
     plt.plot(common_steps, mean_running_max, linewidth=2, color=color,
-             label=f'{label} Best Performance (n={len(aligned_running_max)})')
+             label=f'{label} (n={len(aligned_running_max)})')
 
 def setup_plot():
     """Setup the plot with proper formatting."""
@@ -98,6 +98,7 @@ def setup_plot():
     plt.rcParams.update({'xtick.labelsize': 20})  # X-axis tick font size
     plt.rcParams.update({'ytick.labelsize': 20})  # Y-axis tick font size
     plt.rcParams.update({'legend.fontsize': 20})  # Legend font size
+    plt.rcParams['figure.dpi'] = 300
 
 def finalize_plot(title="Best Performance Comparison"):
     """Finalize the plot with labels, legend, and formatting."""
