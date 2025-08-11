@@ -1,6 +1,6 @@
 from matplotlib import pyplot as plt
 from scipy.stats import mannwhitneyu
-from evaluation.evaluation import build_auc_distribution, get_max_step_from_first_event_file, load_model_logs
+from evaluation import build_auc_distribution, get_max_step_from_first_event_file, load_model_logs
 
 
 def compute_mann_whitney_u_test(path_1, path_2):
@@ -17,13 +17,13 @@ def compute_mann_whitney_u_test(path_1, path_2):
     """
     metric = "rollout/ep_rew_mean"
 
-    max_steps = get_max_step_from_first_event_file(path_1, path_2, metric)
+    max_steps = get_max_step_from_first_event_file([path_1, path_2], metric)
 
-    x_trunc_list_1, y_trunc_list_1 = load_model_logs(path_1, metric, max_steps=max_steps, use_running_max=False)
-    x_trunc_list_2, y_trunc_list_2 = load_model_logs(path_2, metric, max_steps=max_steps, use_running_max=False)
+    x_trunc_list_1, y_trunc_list_1 = load_model_logs(path_1, metric, max_steps=max_steps, use_running_max=True)
+    x_trunc_list_2, y_trunc_list_2 = load_model_logs(path_2, metric, max_steps=max_steps, use_running_max=True)
 
-    aucs_1 = build_auc_distribution(x_trunc_list=x_trunc_list_1, y_trunc_list=y_trunc_list_1)
-    aucs_2 = build_auc_distribution(x_trunc_list=x_trunc_list_2, y_trunc_list=y_trunc_list_2)
+    aucs_1 = build_auc_distribution(x_values=x_trunc_list_1, y_values=y_trunc_list_1)
+    aucs_2 = build_auc_distribution(x_values=x_trunc_list_2, y_values=y_trunc_list_2)
 
     if not aucs_1 or not aucs_2:
         raise ValueError("One or both paths do not contain valid AUC data.")
@@ -44,5 +44,5 @@ def compute_mann_whitney_u_test(path_1, path_2):
 
 
 if __name__ == "__main__":
-    compute_mann_whitney_u_test("./log_baseline_7x7", "./transfer_5x5_to_7x7")
+    compute_mann_whitney_u_test("./logging/log_baseline_7x7", "./logging/log_transfer_5x5_to_7x7")
 

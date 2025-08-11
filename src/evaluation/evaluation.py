@@ -12,6 +12,19 @@ from evaluation_helper import (
 )
 
 
+def build_auc_distribution(
+    x_values,
+    y_values
+):
+    """
+    Computes truncated AUC.
+    """
+    aucs = []
+    for x_trunc, y_trunc in zip(x_values, y_values):
+        auc = np.trapezoid(y_trunc, x_trunc)
+        aucs.append(auc)
+    return aucs
+
 def load_model_logs(
     logs_dir: str,
     scalar_tag: str,
@@ -100,7 +113,7 @@ def main():
     max_steps = get_max_step_from_first_event_file(model_paths + [baseline_model_path], "rollout/ep_rew_mean")
 
     # Calculate performance of the baseline model
-    baseline_x_values, baseline_y_values = load_model_logs(baseline_model_path, "rollout/ep_rew_mean", max_steps=max_steps, use_running_max=False)
+    baseline_x_values, baseline_y_values = load_model_logs(baseline_model_path, "rollout/ep_rew_mean", max_steps=max_steps, use_running_max=True)
     baseline_mean_function = make_cubic_mean_function(x=baseline_x_values, y=baseline_y_values)
 
     baseline_avg_max_reward = calculate_final_performance(mean_func=baseline_mean_function)
@@ -112,7 +125,7 @@ def main():
     model_mean_functions = []
 
     for model_path in model_paths:
-        x_values, y_values = load_model_logs(model_path, "rollout/ep_rew_mean", max_steps=max_steps, use_running_max=False)
+        x_values, y_values = load_model_logs(model_path, "rollout/ep_rew_mean", max_steps=max_steps, use_running_max=True)
 
         model_mean_function = make_cubic_mean_function(x=x_values, y=y_values)
         model_mean_functions.append(model_mean_function)
