@@ -1,5 +1,5 @@
-from stable_baselines3 import DQN
 import torch
+from stable_baselines3 import DQN
 from stable_baselines3.common.env_util import make_vec_env
 
 from envs import make_env

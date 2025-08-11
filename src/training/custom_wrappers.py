@@ -1,7 +1,6 @@
 import numpy as np
 import gymnasium as gym
 from gymnasium import spaces
-from minigrid.core.world_object import Goal, Lava, Wall
 from minigrid.wrappers import FullyObsWrapper
 
 

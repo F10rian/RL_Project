@@ -1,13 +1,11 @@
-import gymnasium as gym
-#import mimicrIEs
 from stable_baselines3 import DQN
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.evaluation import evaluate_policy
-from render_callback import checkpoint_callback, get_eval_callback
 
 from envs import make_env, register_envs
-from learning import curriculum_learning, transfer_feature_extractor, fine_tune_from_checkpoints, fine_tune_from_checkpoint
-from network import MiniGridCNN, MiniGridLinear
+from learning import fine_tune_from_checkpoints, fine_tune_from_checkpoint
+from dqn import create_dqn_model, get_policy_kwargs_cnn
+from network import MiniGridCNN
 from envs import Env
 
 from best_training_reward_callback import BestTrainingRewardCallback
@@ -54,57 +52,8 @@ def get_policy_kwargs(env):
     )
 
 
-# DQN agent initialisieren
-def init_model(
-        env,
-        policy,
-        batch_size=64, # 128
-        learning_rate=5e-4, # Reduced learning rate for more stable learning
-        buffer_size=100_000, # Increased buffer size
-        learning_starts=1000, # Start learning after collecting more experience
-        tau=1.0,
-        gamma=0.99,
-        train_freq=4, # Train every 4 steps (more stable than every step)
-        target_update_interval=1000, # Update target network less frequently
-        exploration_initial_eps=1.0, # Start with full exploration
-        exploration_final_eps=0.1, # End with 10% exploration (higher than default)
-        exploration_fraction=0.8, # Explore for 30% of training (longer than default)
-        verbose=1,
-        tensorboard_log="./dqn_crossing_tensorboard/",
-        ):
-    return DQN(
-        policy,
-        env,
-        learning_rate=learning_rate,  
-        buffer_size=buffer_size,
-        learning_starts=learning_starts,
-        batch_size=batch_size, 
-        tau=tau,
-        gamma=gamma,
-        train_freq=train_freq,
-        target_update_interval=target_update_interval, 
-        verbose=verbose,
-        policy_kwargs=get_policy_kwargs(env),
-        tensorboard_log=tensorboard_log,
-        exploration_initial_eps=exploration_initial_eps,
-        exploration_final_eps=exploration_final_eps,
-        exploration_fraction=exploration_fraction
-    )
-
-
 def load_model(model_path, env):
     return DQN.load(model_path, env=env)
-
-
-def curiculum_learning(pretrained_model, env_ids):
-    model = transfer_feature_extractor(pretrained_model, model)
-    CURRICULUM_ENVS = [
-        Env.Minigrid_7x7.value,
-        Env.Minigrid_11x11.value,
-        Env.Minigrid_15x15.value,
-        Env.Minigrid_21x21.value
-    ]
-    curriculum_learning(pretrained_model, CURRICULUM_ENVS)
 
 
 def eval_model(model, env):
@@ -125,9 +74,10 @@ def train(
     if saved_model_path is not None:
         model = load_model(f"{output_dir}/{saved_model_path}", env=env)
     else:
-        model = init_model(
+        model = create_dqn_model(
             env,
             model_params["policy"],
+            get_policy_kwargs_cnn(),
             batch_size=model_params["batch_size"],
             buffer_size=model_params["buffer_size"],
             exploration_initial_eps=model_params["exploration_initial_eps"],

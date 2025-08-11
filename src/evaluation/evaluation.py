@@ -1,16 +1,15 @@
 import os
 import numpy as np
 
-import numpy as np
 from scipy.integrate import quad
 from print_stats import print_results
+from constants import ROOT_PATH
 from evaluation_helper import (
     get_x_for_given_y,
     make_cubic_mean_function,
     extract_scalar_from_event, 
     get_max_step_from_first_event_file
 )
-from constants import ROOT_PATH
 
 
 def load_model_logs(

@@ -1,8 +1,8 @@
+from envs import make_env
 from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.callbacks import CheckpointCallback
 from stable_baselines3.common.callbacks import EvalCallback
 from stable_baselines3.common.vec_env import DummyVecEnv
-from envs import make_env, register_envs
 
 class RenderCallback(BaseCallback):
     def __init__(self, render_freq=1000, verbose=0):

@@ -1,11 +1,9 @@
-import glob
 import os
+import glob
 import numpy as np
 
-import numpy as np
 from scipy.interpolate import interp1d
 from scipy.optimize import brentq
-
 from tensorboard.backend.event_processing import event_accumulator
 
 

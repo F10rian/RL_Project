@@ -1,14 +1,11 @@
 import time
+import gymnasium as gym
 from enum import Enum
 from minigrid.envs import CrossingEnv
 from gymnasium.envs.registration import register
 
-from minigrid.wrappers import RGBImgObsWrapper, ImgObsWrapper, FullyObsWrapper, FlatObsWrapper
-from custom_wrappers import DirectionalObsWrapper, ObjectTypeAndAgentWrapper, DirectionInImageWrapper
-from reward_shaping import RewardShapingWrapper
-import gymnasium as gym
-
-import numpy as np
+from minigrid.wrappers import ImgObsWrapper
+from custom_wrappers import DirectionalObsWrapper
 
 
 class Env(Enum):

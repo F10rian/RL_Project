@@ -1,12 +1,10 @@
-from tbparse import SummaryReader
-import matplotlib.pyplot as plt
-import numpy as np
 import os
-import argparse
 import sys
+import argparse
+import numpy as np
+import matplotlib.pyplot as plt
 
-from scipy.interpolate import interp1d
-
+from tbparse import SummaryReader
 from evaluation_helper import make_cubic_function
 
 
@@ -136,5 +134,7 @@ if __name__ == "__main__":
         add_reward_plot(log_folders, name, color=color)
     
     # Finalize and show the plot
-    finalize_plot("Transfer Learning: 5x5 to 7x7 Crossing")
+    finalize_plot("")
+    # finalize_plot("Transfer Learning: 5x5 to 7x7 Crossing")
+    plt.savefig("images/transfer_learning_5x5_to_7x7_running_max.svg", format="svg", bbox_inches="tight")
     plt.show()

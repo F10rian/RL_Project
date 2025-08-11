@@ -1,6 +1,5 @@
 from matplotlib import pyplot as plt
 from scipy.stats import mannwhitneyu
-
 from evaluation.evaluation import build_auc_distribution, get_max_step_from_first_event_file, load_model_logs
 
 

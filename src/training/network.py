@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 import gymnasium as gym
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
-import time
 
 
 class MiniGridCNN(BaseFeaturesExtractor):
