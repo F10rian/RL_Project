@@ -9,7 +9,7 @@ We trained two baselines, one is the baseline on the simple env with size 5x5 (g
 In the plot we can see that in an interval of ~[18_000, 44_000] the Transfer Lerning outperforms the 7x7 baseline with the confidence bands not touching. Although the mean of the transfer learning is almost allways higher than the one of the 7x7 baseline, this interval shows not intersection and thereby is with high certainty realy better than the baseline (training from scratch).
 
 
-# Instalation
+# Installation
 
 Clone the repository:
 ```bash
@@ -49,7 +49,7 @@ Fine Tuning (model_path is required):
 python src/training/train.py --mode finetune --env MiniGrid-Crossing-7x7-v0 --model_path logging/log_baseline_5x5/MiniGrid-Crossing-5x5-v0_0 --tensorboard_log logging/log_transfer_5x5_to_7x7 --batch_size 512 --buffer_size 100_000 --lr 1e-4 --exp_init_eps 0.5 --exp_fraction 0.8 --steps 100_000 --verbose 0
 ```
 
-Fine Tuning sweep (the sweep list is hardcoded in train, those are the models):
+Fine Tuning sweep:
 ```bash
 python src/training/train.py --mode finetune_sweep --env MiniGrid-Crossing-7x7-v0 --model_path logging/log_baseline_5x5/MiniGrid-Crossing-5x5-v0 --tensorboard_log logging/log_transfer_5x5_to_7x7 --batch_size 512 --buffer_size 100_000 --lr 1e-4 --exp_init_eps 0.5 --exp_fraction 0.8 --steps 100_000 --verbose 0
 ```
@@ -83,19 +83,4 @@ Hier eine Kurse Übersicht der wichtigsten Befehle:
 - `uv add`: Add a dependency to the project.
 - `uv remove`: Remove a dependency from the project.
 
-
-### Add new package
-
-Package erstellen
-```bash
-uv init --package name-of-package
-```
-
-Unsere packages können wir einfach dem package Ordner hinzufügen und mit dem folgenden Befehl zu einem uv package machen:
-
-```bash
-uv pip install -e /path/to/name-of-package
-```
-
-Dabei ist wichtig, dass euer package-Name nicht mit Unterstrich (\_), sondern Bindestrich (-) geschrieben wird, damit uv das unterschieden kann. Ab dann können wir alle unsere packages einfach mit "name_of_package" in unsere Dateien importieren.
 

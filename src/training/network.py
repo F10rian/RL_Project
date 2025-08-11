@@ -46,7 +46,6 @@ class MiniGridCNN(BaseFeaturesExtractor):
             object_channel = observations[:, 0:1, :, :]  # Shape: (batch, 1, H, W)
         else:  # Single observation
             object_channel = observations[0:1, :, :].unsqueeze(0)  # Shape: (1, 1, H, W)
-        # print("Objects: ", object_channel[0, 0, :, :])  # Print the first channel of the first observation
         return self.linear(self.cnn(object_channel))
 
 
@@ -56,8 +55,6 @@ class MiniGridLinear(BaseFeaturesExtractor):
         
         # Get input size from observation_space
         input_size = observation_space.shape[1]*observation_space.shape[2]
-        #print(f'Observation Shape: {observation_space.shape}')
-        #print(f'Observations Netword dim: {input_size}')
               
         self.linNet = nn.Sequential(
             nn.Linear(input_size, 512),
@@ -73,15 +70,10 @@ class MiniGridLinear(BaseFeaturesExtractor):
         )
 
     def forward(self, observations: torch.Tensor) -> torch.Tensor:
-        #time.sleep(1)
-        #self.print_minigrid(observations[0])
-        #convert i.e. ([64, 3, 5, 5]) to ([64, 25])
         observations = observations[:, 0, :, :].view(observations.shape[0], -1)  # Flatten the input
         # Convert to float if needed (stable-baselines3 often passes int32)
         if observations.dtype != torch.float32:
             observations = observations.float()
-        #print("Observations: ", observations.shape)
-        #self.print_minigrid(observations[0])
         
         # Observation is already flattened
         return self.linNet(observations)
@@ -95,9 +87,5 @@ class MiniGridLinear(BaseFeaturesExtractor):
         print("Original object types (channel 0):")
         for i in range(0, 5):
             print(original_values[i*5:i*5+5])
-        # print("Original colors (channel 1):")
-        # print(original_values[1])
-        # print("Original states (channel 2):")
-        # print(original_values[2])
         print("________________________")
         

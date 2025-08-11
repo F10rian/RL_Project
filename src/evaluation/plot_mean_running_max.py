@@ -52,8 +52,6 @@ def add_reward_plot(log_folders, label, color=None, alpha=0.3):
     aligned_running_max = []
     common_steps = np.linspace(1, 100001, 200)  # 1000 points to match values.shape
 
-    #print(values[0])
-
     for i, rewards in enumerate(values):
         # Calculate running maximum for this run
         running_max = np.maximum.accumulate(rewards)

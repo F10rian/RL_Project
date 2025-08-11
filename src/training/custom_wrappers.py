@@ -43,12 +43,7 @@ class ObjectTypeAndAgentWrapper(gym.ObservationWrapper):
             shape=(flattened_size,),
             dtype=np.int32
         )
-        
-        """print(f"ObjectTypeAndAgentWrapper initialized:")
-        print(f"  Grid size: {height}x{width}")
-        print(f"  Object types size: {height * width}")
-        print(f"  Agent info size: 3 (x, y, direction)")
-        print(f"  Total observation size: {flattened_size}")"""
+
     
     def observation(self, obs):
         """
@@ -134,9 +129,6 @@ class DirectionalObsWrapper(FullyObsWrapper):
         agent_dir = self.unwrapped.agent_dir
 
         x, y = agent_pos
-        #print(agent_dir)
         modified_obs["image"][y, x, 0] = 10 + agent_dir  # encode direction in the object channel
-
-        #print(modified_obs["image"].shape)
 
         return modified_obs
