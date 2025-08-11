@@ -60,6 +60,7 @@ class RewardShapingWrapper(gym.Wrapper):
                 np.array(current_agent_pos) - np.array(self.goal_position)
             )
             shaped_reward -= 0.001  # Small penalty for each step
+            
             # Reward for getting closer to goal (potential-based shaping)
             distance_reward = (self.previous_distance_to_goal - current_distance) * 0.1
             shaped_reward += distance_reward

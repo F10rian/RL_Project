@@ -1,9 +1,9 @@
 import time
 import gymnasium as gym
+
 from enum import Enum
 from minigrid.envs import CrossingEnv
 from gymnasium.envs.registration import register
-
 from minigrid.wrappers import ImgObsWrapper
 from custom_wrappers import DirectionalObsWrapper
 
@@ -46,6 +46,7 @@ class MiniGridCrossing49x49(CrossingEnv):
     def __init__(self, **kwargs):
         super().__init__(size=29, num_crossings=0, **kwargs)
 
+
 def register_envs():
     # Register them to gym
     register(
@@ -73,7 +74,6 @@ def register_envs():
         entry_point='envs:MiniGridCrossing15x15',
     )
 
-
     register(
         id=Env.Minigrid_21x21.value,
         entry_point='envs:MiniGridCrossing21x21',
@@ -84,9 +84,9 @@ def register_envs():
         entry_point='envs:MiniGridCrossing49x49',
     )
 
+
 def make_env(env_id):
     env = gym.make(env_id)#, render_mode="human")
-    #env = RewardShapingWrapper(env)  # Enable reward shaping for better learning
     env = DirectionalObsWrapper(env)  # This gives you the full 5x5 grid view
     env = ImgObsWrapper(env)    # This extracts just the image from the dict
     return env
@@ -100,6 +100,7 @@ def test_and_visualize_envs(env_id):
         env.reset()
         env.render()
         time.sleep(1)
+
 
 def test_and_visualize_env_with_random_walk(env_id):
     env = make_env(env_id)

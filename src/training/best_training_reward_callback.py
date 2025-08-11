@@ -7,6 +7,7 @@ class BestTrainingRewardCallback(BaseCallback):
     Save the model when the mean training episode reward improves.
     This does NOT run extra evaluation episodes, only uses training data.
     """
+    
     def __init__(self, save_path, save_freq=1000, window_size=10, verbose=1):
         super().__init__(verbose)
         self.save_path = save_path

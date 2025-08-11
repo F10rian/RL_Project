@@ -4,6 +4,7 @@ from stable_baselines3.common.callbacks import CheckpointCallback
 from stable_baselines3.common.callbacks import EvalCallback
 from stable_baselines3.common.vec_env import DummyVecEnv
 
+
 class RenderCallback(BaseCallback):
     def __init__(self, render_freq=1000, verbose=0):
         super().__init__(verbose)
