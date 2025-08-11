@@ -41,17 +41,17 @@ uv sync
 
 From scratch training (Baseline):
 ```bash
-python src/training/train.py --mode train --env MiniGrid-Crossing-5x5-v0 --tensorboard_log logging/log_baseline_5x5 --num_models 20 --batch_size 512 --buffer_size 100_000 --lr 1e-4 --exp_init_eps 0.5 --exp_fraction 0.8 --verbose 0
+python src/training/train.py --mode train --env MiniGrid-Crossing-5x5-v0 --tensorboard_log logging/log_baseline_5x5 --num_models 20 --batch_size 512 --buffer_size 100_000 --lr 5e-4 --exp_init_eps 1.0 --exp_fraction 0.8 --steps 100_000 --verbose 0
 ```
 
 Fine Tuning (model_path is required):
 ```bash
-python src/training/train.py --mode finetune --env MiniGrid-Crossing-7x7-v0 --model_path logging/log_baseline_5x5/dqn_5x5_0 --tensorboard_log logging/log_transfer_5x5_to_7x7 --num_models 20 --batch_size 512 --buffer_size 100_000 --lr 1e-4 --exp_init_eps 0.5 --exp_fraction 0.8 --verbose 0
+python src/training/train.py --mode finetune --env MiniGrid-Crossing-7x7-v0 --model_path logging/log_baseline_5x5/MiniGrid-Crossing-5x5-v0_0 --tensorboard_log logging/log_transfer_5x5_to_7x7 --batch_size 512 --buffer_size 100_000 --lr 1e-4 --exp_init_eps 0.5 --exp_fraction 0.8 --steps 100_000 --verbose 0
 ```
 
 Fine Tuning sweep (the sweep list is hardcoded in train, those are the models):
 ```bash
-python src/training/train.py --mode finetune_sweep --env MiniGrid-Crossing-7x7-v0 --tensorboard_log logging/log_transfer_5x5_to_7x7 --num_models 20 --batch_size 512 --buffer_size 100_000 --lr 1e-4 --exp_init_eps 0.5 --exp_fraction 0.8 --verbose 0
+python src/training/train.py --mode finetune_sweep --env MiniGrid-Crossing-7x7-v0 --tensorboard_log logging/log_transfer_5x5_to_7x7 --batch_size 512 --buffer_size 100_000 --lr 1e-4 --exp_init_eps 0.5 --exp_fraction 0.8 --steps 100_000 --verbose 0
 ```
 
 
