@@ -100,7 +100,7 @@ def setup_plot():
     plt.rcParams.update({'legend.fontsize': 20})  # Legend font size
     plt.rcParams['figure.dpi'] = 300
 
-def finalize_plot(title="Best Performance Comparison"):
+def finalize_plot():
     """Finalize the plot with labels, legend, and formatting."""
     # Set axis limits to ensure 0,0 is at the intersection of axes
     plt.xlim(left=0)
@@ -108,7 +108,7 @@ def finalize_plot(title="Best Performance Comparison"):
     
     plt.xlabel("Timesteps", fontsize=24)
     plt.ylabel("Best Episode Reward (Running Max)", fontsize=24)
-    plt.title(title, fontsize=28)
+    #plt.title(title, fontsize=28)
     plt.legend(fontsize=20)
     plt.grid(True, alpha=0.3)
 
@@ -148,5 +148,5 @@ if __name__ == "__main__":
         add_reward_plot(log_folders, name, color=color)
     
     # Finalize and show the plot
-    finalize_plot("Transfer Learning: 5x5 to 7x7 Crossing")
+    finalize_plot()
     plt.show()
