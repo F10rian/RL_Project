@@ -63,7 +63,7 @@ def add_reward_plot(log_folders, label, color=None, alpha=0.3):
     plt.fill_between(common_steps, min_rewards, max_rewards, alpha=alpha, 
                      color=color)  # Remove label to exclude from legend
     plt.plot(common_steps, mean_rewards, linewidth=2, color=color,
-             label=f'{label} Mean (n={len(all_rewards)})')
+             label=f'{label} (n={len(all_rewards)})')
 
 def setup_plot():
     """Setup the plot with proper formatting."""
@@ -75,6 +75,7 @@ def setup_plot():
     plt.rcParams.update({'xtick.labelsize': 20})  # X-axis tick font size
     plt.rcParams.update({'ytick.labelsize': 20})  # Y-axis tick font size
     plt.rcParams.update({'legend.fontsize': 20})  # Legend font size
+    plt.rcParams['figure.dpi'] = 300
 
 def finalize_plot(title="Reward Progress Comparison"):
     """Finalize the plot with labels, legend, and formatting."""
@@ -82,10 +83,10 @@ def finalize_plot(title="Reward Progress Comparison"):
     plt.xlim(left=0)
     plt.ylim(bottom=0)
     
-    plt.xlabel("Timesteps", fontsize=12)
-    plt.ylabel("Mean Episode Reward", fontsize=12)
-    plt.title(title, fontsize=14)
-    plt.legend()
+    plt.xlabel("Timesteps", fontsize=24)
+    plt.ylabel("Mean Episode Reward", fontsize=24)
+    plt.title(title, fontsize=28)
+    plt.legend(fontsize=20)
     plt.grid(True, alpha=0.3)
 
 # Example usage:
