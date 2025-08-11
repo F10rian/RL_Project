@@ -1,12 +1,12 @@
-# Grid World Transfer Learning -​ from Small to Big Challenges
+# Grid World Transfer Learning -​ from Small to Large Environments
 
-<img src="images/Mean_running_max.png" width="512">
 
-This project strides toward showing the power of Transfer Learning. And how Transfer Learning can save computation time if models trained on lower complexity enviroments are available. In our example we chose the [Crossing](https://minigrid.farama.org/environments/minigrid/CrossingEnv/) env from [MiniGrid](https://minigrid.farama.org/). As the agent we choose the preimplemented [DQN Agent](https://stable-baselines3.readthedocs.io/en/master/modules/dqn.html) from [Stable Baselines3](https://stable-baselines3.readthedocs.io/en/master/index.html) and inserted our own Neural Network into it.
+This project aims to demonstrate the effectiveness of Transfer Learning and how it can significantly reduce computation time when models trained on lower-complexity environments are available.
+In our example, we selected the [Crossing](https://minigrid.farama.org/environments/minigrid/CrossingEnv/) environment from [MiniGrid](https://minigrid.farama.org/) and used the pre-implemented [DQN Agent](https://stable-baselines3.readthedocs.io/en/master/modules/dqn.html) from [Stable Baselines3](https://stable-baselines3.readthedocs.io/en/master/index.html), replacing its default network with our custom neural network architecture.
 
-In the plot above we tracked the running max (histprical max) Episode reward of our models. We ran 20 runs with random seeds per experiment and plotted to mean curve for our three experiments and the band is our 95% confidence interval. 
-We trained two baselines, one is the baseline on the simple env with size 5x5 (green) and the otehr one on the same env but with size 7x7 (blue). We trained both on 100_000 Steps. Our third experiment is our transfer of the 5x5 models to a 7x7 enviroment trained on 80_000 steps.
-In the plot we can see that in an interval of ~[18_000, 44_000] the Transfer Lerning outperforms the 7x7 baseline with the confidence bands not touching. Although the mean of the transfer learning is almost allways higher than the one of the 7x7 baseline, this interval shows not intersection and thereby is with high certainty realy better than the baseline (training from scratch).
+We investigate how transfer learning impacts the convergence speed of Deep Q-Networks (DQNs) when fine-tuning across grid-world environments of varying sizes. By pretraining agents on a small $5\times5$ grid and transferring to larger $7\times7$ and $9\times9$ grids, we compare transfer learning against training from scratch. Our results show that transfer learning accelerates early training, with the greatest benefits observed when transferring to substantially larger environments. Furthermore, incorporating curriculum learning with an intermediate environment further improves learning speed and final performance. These findings demonstrate that transfer and curriculum learning are effective strategies to enhance sample efficiency and performance of DQNs in grid-world navigation tasks.
+
+Further details can be found in our [paper](Grid_World_Transfer_Learning.pdf).
 
 
 # Installation
@@ -31,7 +31,7 @@ In Windows:
 .venv\Scripts\activate
 ```
 
-To get all the librarys:
+To get all the libraries:
 ```powershell
 uv sync
 ```
@@ -55,14 +55,14 @@ python src/training/train.py --mode finetune_sweep --env MiniGrid-Crossing-7x7-v
 ```
 
 
-# Ploting
+# Plotting
 
-Ploting the mean episode reward with min max band:
+Plotting the mean episode reward with min max band:
 ```bash
 python src/evaluation/plot_mean.py logging/log_baseline_5x5 "5x5 baseline" logging/log_baseline_7x7 "7x7 baseline" logging/log_transfer_5x5_to_7x7 "Transfer 5x5 to 7x7"
 ```
 
-Ploting the running max over mean episode reward with 95% confidence band:
+Plotting the running max over mean episode reward with 95% confidence band:
 ```bash
 python src/evaluation/plot_mean_running_max.py logging/log_baseline_5x5 "5x5 baseline" logging/log_baseline_7x7 "7x7 baseline" logging/log_transfer_5x5_to_7x7 "Transfer 5x5 to 7x7"
 ```
@@ -72,15 +72,5 @@ python src/evaluation/plot_mean_running_max.py logging/log_baseline_5x5 "5x5 bas
 
 <img src="images/Network.png" width="256">
 
-This is the Network architecture of our DQN. The terminolagy for Conv layers is Conv(Kernel size, Feature Maps Out), AdaptiveAvgPooling means a pooling from dimensions of [h, w, x] to [k, k, x] with k beeing the input of AadptiveAvgPooling. Input to the entwork is a representation of the env and output is the 7 possible actions (from which only 3 are used in this env).
-
-
-# Using uv
-
-Hier eine Kurse Übersicht der wichtigsten Befehle:
-
-- `uv sync`: Sync the project's dependencies with the environment. (Bitte immer als erstes nach dem pull ausführen, damit wir alle auf dem selben Stand sind)
-- `uv add`: Add a dependency to the project.
-- `uv remove`: Remove a dependency from the project.
-
+This is the Network architecture of our DQN. The terminology for convolutional layers is Conv(Kernel size, Feature Maps Out), AdaptiveAvgPooling means a pooling from dimensions of [h, w, x] to [k, k, x] with k beeing the input of AdaptiveAvgPooling. Input to the network is a representation of the env and output are the 7 possible actions (from which only 3 are used in this env).
 
