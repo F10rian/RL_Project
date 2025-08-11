@@ -5,7 +5,6 @@ from stable_baselines3.common.callbacks import EvalCallback
 from stable_baselines3.common.vec_env import DummyVecEnv
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.env_util import make_vec_env
-
 from best_training_reward_callback import BestTrainingRewardCallback
 
 
@@ -28,24 +27,6 @@ def train(env_id, model, env):
     print(f"Mean reward: {mean_reward:.2f} ± {std_reward:.2f}")
 
 
-def transfer_weights_linear(pretrained_model, model):
-    # Get pretrained state dict
-    pretrained_state_dict = pretrained_model.policy.state_dict()
-    new_state_dict = model.policy.state_dict()
-
-    # Replace matching layers only
-    for name in new_state_dict:
-        if name in pretrained_state_dict:
-            if pretrained_state_dict[name].shape == new_state_dict[name].shape:
-                new_state_dict[name] = pretrained_state_dict[name]
-                print(f"Loaded layer: {name}")
-            else:
-                print(f"Skipped layer (shape mismatch): {name}")
-
-    # Load updated weights
-    model.policy.load_state_dict(new_state_dict)
-    return model
-
 def transfer_feature_extractor(pretrained_model, model):
     """
     Transfer all feature extractor weights from pretrained model to new model.
@@ -65,26 +46,6 @@ def transfer_feature_extractor(pretrained_model, model):
     print(f"  - Transferred {len(pretrained_features_dict)} layers")
     for layer_name in list(pretrained_features_dict.keys())[:]:
         print(f"{layer_name}")
-    
-    return model
-
-
-def transfer_cnn_only(pretrained_model, model):
-    """
-    Transfer only the CNN feature extractor weights (recommended for transfer learning).
-    This preserves the Q-network head for the new environment.
-    """
-    # Get CNN weights from both models
-    pretrained_cnn_dict = pretrained_model.policy.q_net.features_extractor.cnn.state_dict()
-    
-    # Load CNN weights into new model's feature extractor
-    model.policy.q_net.features_extractor.cnn.load_state_dict(pretrained_cnn_dict)
-    
-    # Also load into target network
-    model.policy.q_net_target.features_extractor.cnn.load_state_dict(pretrained_cnn_dict)
-    
-    print("Transferred CNN feature extractor weights")
-    print(f"  - Transferred {len(pretrained_cnn_dict)} CNN layers")
     
     return model
 
@@ -126,6 +87,7 @@ def fine_tune_from_checkpoint(checkpoint_path, env_id, model_params, index=0):
 
     # Learn and save best model
     model.learn(total_timesteps=model_params["steps"], callback=call_back)
+
 
 def fine_tune_from_checkpoints(checkpoint_paths, env_id, model_params):
     for i, checkpoint_path in enumerate(checkpoint_paths):
