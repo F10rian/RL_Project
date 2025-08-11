@@ -57,9 +57,9 @@ Fine Tuning (model_path is required):
 python test2.py --mode finetune --env MiniGrid-Crossing-7x7-v0 --model_path log_baseline_5x5/MiniGrid-Crossing-5x5-v0_0 --tensorboard_log log_transfer_5x5_to_7x7 --batch_size 512 --buffer_size 100_000 --lr 1e-4 --exp_init_eps 0.5 --exp_fraction 0.8 --steps 100_000 --verbos 0
 ```
 
-Fine Tuning sweep (the sweep list is hardcoded in test2, those are the models):
+Fine Tuning sweep:
 ```bash
-python test2.py --mode finetune_sweep --env MiniGrid-Crossing-7x7-v0 --tensorboard_log log_transfer_5x5_to_7x7 --batch_size 512 --buffer_size 100_000 --lr 1e-4 --exp_init_eps 0.5 --exp_fraction 0.8 --steps 100_000 --verbos 0
+python test2.py --mode finetune_sweep --env MiniGrid-Crossing-7x7-v0 --model_path log_baseline_5x5/MiniGrid-Crossing-5x5-v0 --tensorboard_log log_transfer_5x5_to_7x7 --batch_size 512 --buffer_size 100_000 --lr 1e-4 --exp_init_eps 0.5 --exp_fraction 0.8 --steps 100_000 --verbos 0
 ```
 
 # Ploting
